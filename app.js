@@ -1,6 +1,6 @@
 /**
- * LP Opticas - Professional Quotation Engine
- * Optimized for multi-step flow and cart management
+ * LP Opticas - Professional Quotation Engine (Autocomplete Edition)
+ * Optimized for multi-step flow and real-time filtering
  */
 
 // State
@@ -8,6 +8,7 @@ let masterData = [];
 let indexedData = {}; // { Category: { ProductName: [Items] } }
 let cart = JSON.parse(localStorage.getItem("proforma")) || [];
 let currentItem = null;
+let currentCategory = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -18,7 +19,7 @@ async function initApp() {
     const response = await fetch("precios.json");
     masterData = await response.json();
 
-    // Build Advanced Index with Casing normalization
+    // Build Advanced Index
     masterData.forEach((item) => {
       const cat = item.Categoria || item.categoria || "Otros";
       const name = item.Subcategoria || item.nombre || "Sin Nombre";
@@ -26,7 +27,6 @@ async function initApp() {
       if (!indexedData[cat]) indexedData[cat] = {};
       if (!indexedData[cat][name]) indexedData[cat][name] = [];
 
-      // Normalize item for display logic
       const normalized = {
         id: item["# idPrecio"] || item.idPrecio || Math.random(),
         categoria: cat,
@@ -41,7 +41,6 @@ async function initApp() {
               ? item.sf
               : null,
       };
-
       indexedData[cat][name].push(normalized);
     });
 
@@ -53,7 +52,7 @@ async function initApp() {
     const overlay = document.getElementById("loadingOverlay");
     if (overlay)
       overlay.innerHTML =
-        '<p style="color:red; padding: 2rem;">Error al cargar precios.json. Asegúrate de que el archivo existe y es válido.</p>';
+        '<p style="color:red; padding: 2rem;">Error al cargar datos. Recarga la página.</p>';
   }
 }
 
@@ -62,18 +61,112 @@ function setupEventListeners() {
     btn.addEventListener("click", () => selectCategory(btn.dataset.cat));
   });
 
-  document
-    .getElementById("productSelect")
-    .addEventListener("change", (e) => selectProduct(e.target.value));
-  document
-    .getElementById("measureSelect")
-    .addEventListener("change", (e) => selectMeasure(e.target.value));
+  // Autocomplete for Products
+  setupAutocomplete(
+    document.getElementById("productInput"),
+    document.getElementById("productSuggestions"),
+    () => Object.keys(indexedData[currentCategory] || {}).sort(),
+    (val) => selectProduct(val),
+  );
+
+  // Autocomplete for Measures
+  setupAutocomplete(
+    document.getElementById("measureInput"),
+    document.getElementById("measureSuggestions"),
+    () => {
+      const productName = document.getElementById("productInput").value;
+      if (!productName || !indexedData[currentCategory][productName]) return [];
+      return indexedData[currentCategory][productName]
+        .map((i) => i.medida)
+        .sort();
+    },
+    (val) => selectMeasure(val),
+  );
+
   document.getElementById("clearCart").addEventListener("click", clearCart);
   document
     .getElementById("sendWhatsApp")
     .addEventListener("click", sendToWhatsApp);
 }
 
+/**
+ * Reusable Autocomplete Logic
+ */
+function setupAutocomplete(input, list, getOptionsFn, onSelectFn) {
+  let selectedIndex = -1;
+
+  input.addEventListener("input", (e) => {
+    const value = e.target.value.toLowerCase().trim();
+    const options = getOptionsFn();
+    const filtered = options.filter((opt) => opt.toLowerCase().includes(value));
+
+    renderSuggestions(filtered, list, input, (selected) => {
+      input.value = selected;
+      list.classList.remove("active");
+      onSelectFn(selected);
+    });
+
+    if (value && filtered.length > 0) {
+      list.classList.add("active");
+    } else {
+      list.classList.remove("active");
+    }
+    selectedIndex = -1;
+  });
+
+  input.addEventListener("keydown", (e) => {
+    const items = list.querySelectorAll(".suggestion-item");
+    if (!list.classList.contains("active")) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % items.length;
+      updateSelection(items);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+      updateSelection(items);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      if (selectedIndex > -1) {
+        e.preventDefault();
+        items[selectedIndex].click();
+      }
+    } else if (e.key === "Escape") {
+      list.classList.remove("active");
+    }
+  });
+
+  function updateSelection(items) {
+    items.forEach((item, idx) => {
+      if (idx === selectedIndex) {
+        item.classList.add("selected");
+        item.scrollIntoView({ block: "nearest" });
+      } else {
+        item.classList.remove("selected");
+      }
+    });
+  }
+
+  // Close list when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!input.contains(e.target) && !list.contains(e.target)) {
+      list.classList.remove("active");
+    }
+  });
+}
+
+function renderSuggestions(filtered, list, input, onSelect) {
+  list.innerHTML = "";
+  filtered.forEach((text) => {
+    const div = document.createElement("div");
+    div.className = "suggestion-item";
+    div.textContent = text;
+    div.addEventListener("click", () => onSelect(text));
+    list.appendChild(div);
+  });
+}
+
+// NAVIGATION & FLOW
 function goToStep(step) {
   document
     .querySelectorAll(".step-content")
@@ -91,45 +184,23 @@ function goToStep(step) {
 }
 
 function selectCategory(cat) {
-  const productSelect = document.getElementById("productSelect");
-  productSelect.innerHTML = '<option value="">Selecciona Producto...</option>';
-
-  if (indexedData[cat]) {
-    const names = Object.keys(indexedData[cat]).sort();
-    names.forEach((name) => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      productSelect.appendChild(opt);
-    });
-  }
-
-  window.currentCategory = cat;
+  currentCategory = cat;
+  document.getElementById("productInput").value = "";
+  document.getElementById("measureInput").value = "";
+  document.getElementById("measureInput").disabled = true;
   goToStep(2);
 }
 
 function selectProduct(name) {
-  const measureSelect = document.getElementById("measureSelect");
-  measureSelect.innerHTML = '<option value="">Selecciona Medida...</option>';
-  measureSelect.disabled = !name;
-
-  if (name && indexedData[window.currentCategory][name]) {
-    const measuresSorted = indexedData[window.currentCategory][name].sort(
-      (a, b) => a.medida.localeCompare(b.medida),
-    );
-    measuresSorted.forEach((m) => {
-      const opt = document.createElement("option");
-      opt.value = m.medida;
-      opt.textContent = m.medida;
-      measureSelect.appendChild(opt);
-    });
-  }
+  const measureInput = document.getElementById("measureInput");
+  measureInput.value = "";
+  measureInput.disabled = !name;
+  if (name) measureInput.focus();
 }
 
 function selectMeasure(measure) {
-  if (!measure) return;
-  const productName = document.getElementById("productSelect").value;
-  const item = indexedData[window.currentCategory][productName].find(
+  const productName = document.getElementById("productInput").value;
+  const item = indexedData[currentCategory][productName].find(
     (i) => i.medida === measure,
   );
 
@@ -140,6 +211,7 @@ function selectMeasure(measure) {
   }
 }
 
+// CALCULATION VIEW
 function renderCalculationView(item) {
   const display = document.getElementById("priceDisplay");
   const sfBadge =
@@ -207,16 +279,12 @@ function calculateLiveTotal(qty) {
   document.getElementById("liveTotal").textContent = `${total} Bs.`;
 }
 
+// CART
 function addToCart() {
   const qty = parseInt(document.getElementById("qtyInput").value);
   const existingIndex = cart.findIndex((i) => i.id === currentItem.id);
-
-  if (existingIndex > -1) {
-    cart[existingIndex].qty += qty;
-  } else {
-    cart.push({ ...currentItem, qty: qty });
-  }
-
+  if (existingIndex > -1) cart[existingIndex].qty += qty;
+  else cart.push({ ...currentItem, qty: qty });
   saveCart();
   updateCartUI();
   goToStep(1);
@@ -238,8 +306,8 @@ function renderCart() {
   const container = document.getElementById("cartItems");
   const totalDisplay = document.getElementById("cartTotal");
   let total = 0;
-
   container.innerHTML = "";
+
   if (cart.length === 0) {
     container.innerHTML =
       '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu proforma está vacía.</p>';
@@ -250,7 +318,6 @@ function renderCart() {
   cart.forEach((item, index) => {
     const subtotal = (parseFloat(item.cf) * item.qty).toFixed(1);
     total += parseFloat(subtotal);
-
     const div = document.createElement("div");
     div.className = "glass";
     div.style.padding = "1rem";
@@ -271,7 +338,6 @@ function renderCart() {
         `;
     container.appendChild(div);
   });
-
   totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
 }
 
@@ -296,18 +362,14 @@ function clearCart() {
 function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
   let message = `Hola, soy ${client.optica.toUpperCase()}.\nQuisiera cotizar:\n\n`;
-
   cart.forEach((item) => {
-    message += `subcategoria: ${item.nombre}\n`;
-    message += `Medida: ${item.medida}\n`;
-    message += `Cantidad: ${item.qty}\n`;
-    message += `-------------------------------------------\n`;
+    message += `subcategoria: ${item.nombre}\nMedida: ${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
   });
-
   message += `Gracias.`;
-
-  const encoded = encodeURIComponent(message);
-  window.open(`https://wa.me/59163418141?text=${encoded}`, "_blank");
+  window.open(
+    `https://wa.me/59163418141?text=${encodeURIComponent(message)}`,
+    "_blank",
+  );
 }
 
 function hideLoading() {
