@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catálogo Optimarket S.R.L</title>
+    <title>Catálogo Optimarket</title>
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -32,7 +32,7 @@
     <div id="loadingOverlay">
       <div class="spinner"></div>
       <p style="margin-top: 1rem; font-weight: 500">
-        Cargando catálogo...
+        Cargando...
       </p>
     </div>
 
@@ -118,7 +118,7 @@
                   class="fas fa-eye"
                   style="font-size: 1.5rem; margin-bottom: 0.5rem"
                 ></i>
-                <span>ORGÁNICOS</span>
+                <span>ORGANICOS</span>
               </button>
               <button
                 class="btn glass category-btn"
@@ -129,7 +129,7 @@
                   class="fas fa-glasses"
                   style="font-size: 1.5rem; margin-bottom: 0.5rem"
                 ></i>
-                <span>BIFOCALES</span>
+                <span>BIFOCALES TERMINADO</span>
               </button>
               <button
                 class="btn glass category-btn"
@@ -158,15 +158,30 @@
             </button>
             <div class="form-group">
               <label class="form-label">Subcategoría (Producto)</label>
-              <select id="productSelect" class="form-input">
-                <option value="">Selecciona Producto...</option>
-              </select>
+              <div class="autocomplete-container">
+                <input
+                  type="text"
+                  id="productInput"
+                  class="form-input"
+                  placeholder="Escribe para buscar producto..."
+                  autocomplete="off"
+                />
+                <div id="productSuggestions" class="suggestions-list"></div>
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Medida</label>
-              <select id="measureSelect" class="form-input" disabled>
-                <option value="">Primero selecciona un producto</option>
-              </select>
+              <div class="autocomplete-container">
+                <input
+                  type="text"
+                  id="measureInput"
+                  class="form-input"
+                  placeholder="Escribe para buscar medida..."
+                  autocomplete="off"
+                  disabled
+                />
+                <div id="measureSuggestions" class="suggestions-list"></div>
+              </div>
             </div>
           </div>
         </section>
@@ -297,5 +312,3 @@
     </script>
   </body>
 </html>
-
-
