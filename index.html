@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo | LP Opticas</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .search-container {
+        position: sticky;
+        top: 1rem;
+        z-index: 50;
+        margin-bottom: 2rem;
+      }
+
+      #results {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .filter-section {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+      }
+
+      .filter-group {
+        flex: 1;
+        min-width: 250px;
+      }
+
+      #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-body);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        transition: opacity 0.5s ease;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--primary-light);
+        border-top: 4px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; font-weight: 500">
+        Cargando catálogo premium...
+      </p>
+    </div>
+
+    <button class="theme-toggle glass" id="themeToggle">
+      <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container animate-fade-in">
+      <header style="margin-bottom: 3rem; text-align: left">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <div>
+            <h1 class="text-gradient" style="font-size: 2.5rem">LP Opticas</h1>
+            <p id="welcomeMessage" style="color: var(--text-muted)"></p>
+          </div>
+          <button
+            id="logoutBtn"
+            class="glass"
+            style="
+              padding: 0.5rem 1rem;
+              border-radius: 12px;
+              cursor: pointer;
+              color: var(--text-muted);
+            "
+          >
+            <i class="fas fa-sign-out-alt"></i> Salir
+          </button>
+        </div>
+      </header>
+
+      <section class="search-container">
+        <div class="glass-card" style="padding: 1.5rem">
+          <div class="filter-section">
+            <div class="filter-group">
+              <label class="form-label">Producto</label>
+              <div style="position: relative">
+                <i
+                  class="fas fa-search"
+                  style="
+                    position: absolute;
+                    left: 1rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: var(--text-muted);
+                  "
+                ></i>
+                <input
+                  type="text"
+                  id="productSearch"
+                  class="form-input"
+                  style="padding-left: 2.8rem"
+                  placeholder="Buscar producto (ej: Organico Blanco)..."
+                  list="productList"
+                />
+                <datalist id="productList"></datalist>
+              </div>
+            </div>
+            <div class="filter-group">
+              <label class="form-label">Medida</label>
+              <select id="measureFilter" class="form-input" disabled>
+                <option value="">Primero selecciona un producto</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main id="results">
+        <!-- Results will be injected here -->
+        <div
+          id="initialState"
+          style="
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+          "
+        >
+          <i
+            class="fas fa-glasses"
+            style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5"
+          ></i>
+          <p>Busca un producto y selecciona una medida para ver los precios.</p>
+        </div>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      // Access Control
+      const client = JSON.parse(localStorage.getItem("registeredClient"));
+      if (!client) {
+        window.location.href = "form.html";
+      } else {
+        document.getElementById("welcomeMessage").innerText =
+          `Catálogo para ${client.optica}`;
+      }
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("registeredClient");
+        window.location.href = "form.html";
+      });
+
+      // Theme Toggle
+      const themeBtn = document.getElementById("themeToggle");
+      themeBtn.addEventListener("click", () => {
+        const body = document.body;
+        const isDark = body.getAttribute("data-theme") === "dark";
+        body.setAttribute("data-theme", isDark ? "light" : "dark");
+        themeBtn.innerHTML = isDark
+          ? '<i class="fas fa-moon"></i>'
+          : '<i class="fas fa-sun"></i>';
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+      });
+
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.setAttribute("data-theme", "dark");
+        themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+    </script>
+  </body>
+</html>
