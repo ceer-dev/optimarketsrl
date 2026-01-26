@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catálogo OPTIMARKET SRL</title>
+    <title>OPTIMARKET / CATALOGO </title>
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -56,25 +56,32 @@
           "
         >
           <div>
-            <h1 class="text-gradient" style="font-size: 2.2rem">OPTIMARKET SRL</h1>
+            <h1 class="text-gradient" style="font-size: 2.2rem">OPTIMARKET S.R.L</h1>
             <p
               id="welcomeMessage"
               style="color: var(--text-muted); font-size: 0.9rem"
             ></p>
           </div>
-          <button
-            id="logoutBtn"
-            class="glass"
-            style="
-              padding: 0.5rem 1rem;
-              border-radius: 12px;
-              cursor: pointer;
-              color: var(--text-muted);
-              border: none;
-            "
-          >
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
+          <div style="display: flex; gap: 0.75rem; align-items: center">
+            <!-- Floating Proforma Button - Moved to Header -->
+            <button id="proformaBtn" class="proforma-badge hidden">
+              <i class="fas fa-file-invoice-dollar"></i>
+              <span id="cartCount">0</span>
+            </button>
+            <button
+              id="logoutBtn"
+              class="glass"
+              style="
+                padding: 0.5rem 1rem;
+                border-radius: 12px;
+                cursor: pointer;
+                color: var(--text-muted);
+                border: none;
+              "
+            >
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -82,7 +89,7 @@
       <div class="steps">
         <div class="step active" id="step1-indicator">
           <div class="step-circle">1</div>
-          <div class="step-label">Categoría</div>
+          <div class="step-label">Categoria</div>
         </div>
         <div class="step" id="step2-indicator">
           <div class="step-circle">2</div>
@@ -197,12 +204,6 @@
           <div id="priceDisplay"></div>
         </section>
       </main>
-    </div>
-
-    <!-- Floating Proforma Button -->
-    <div id="proformaBtn" class="proforma-badge hidden">
-      <i class="fas fa-file-invoice-dollar"></i>
-      <span>Ver Proforma (<span id="cartCount">0</span>)</span>
     </div>
 
     <!-- Proforma Modal -->
