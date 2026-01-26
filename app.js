@@ -1,0 +1,319 @@
+/**
+ * LP Opticas - Professional Quotation Engine
+ * Optimized for multi-step flow and cart management
+ */
+
+// State
+let masterData = [];
+let indexedData = {}; // { Category: { ProductName: [Items] } }
+let cart = JSON.parse(localStorage.getItem("proforma")) || [];
+let currentItem = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  initApp();
+});
+
+async function initApp() {
+  try {
+    const response = await fetch("precios.json");
+    masterData = await response.json();
+
+    // Build Advanced Index with Casing normalization
+    masterData.forEach((item) => {
+      const cat = item.Categoria || item.categoria || "Otros";
+      const name = item.Subcategoria || item.nombre || "Sin Nombre";
+
+      if (!indexedData[cat]) indexedData[cat] = {};
+      if (!indexedData[cat][name]) indexedData[cat][name] = [];
+
+      // Normalize item for display logic
+      const normalized = {
+        id: item["# idPrecio"] || item.idPrecio || Math.random(),
+        categoria: cat,
+        nombre: name,
+        medida: item.medida || "Única",
+        cf:
+          item.CF !== undefined ? item.CF : item.cf !== undefined ? item.cf : 0,
+        sf:
+          item.SF !== undefined
+            ? item.SF
+            : item.sf !== undefined
+              ? item.sf
+              : null,
+      };
+
+      indexedData[cat][name].push(normalized);
+    });
+
+    setupEventListeners();
+    updateCartUI();
+    hideLoading();
+  } catch (err) {
+    console.error("Initialization error:", err);
+    const overlay = document.getElementById("loadingOverlay");
+    if (overlay)
+      overlay.innerHTML =
+        '<p style="color:red; padding: 2rem;">Error al cargar precios.json. Asegúrate de que el archivo existe y es válido.</p>';
+  }
+}
+
+function setupEventListeners() {
+  document.querySelectorAll(".category-btn").forEach((btn) => {
+    btn.addEventListener("click", () => selectCategory(btn.dataset.cat));
+  });
+
+  document
+    .getElementById("productSelect")
+    .addEventListener("change", (e) => selectProduct(e.target.value));
+  document
+    .getElementById("measureSelect")
+    .addEventListener("change", (e) => selectMeasure(e.target.value));
+  document.getElementById("clearCart").addEventListener("click", clearCart);
+  document
+    .getElementById("sendWhatsApp")
+    .addEventListener("click", sendToWhatsApp);
+}
+
+function goToStep(step) {
+  document
+    .querySelectorAll(".step-content")
+    .forEach((s) => s.classList.remove("active"));
+  document
+    .querySelectorAll(".step")
+    .forEach((s) => s.classList.remove("active"));
+
+  document.getElementById(`step${step}`).classList.add("active");
+  document.getElementById(`step${step}-indicator`).classList.add("active");
+
+  for (let i = 1; i < step; i++) {
+    document.getElementById(`step${i}-indicator`).classList.add("active");
+  }
+}
+
+function selectCategory(cat) {
+  const productSelect = document.getElementById("productSelect");
+  productSelect.innerHTML = '<option value="">Selecciona Producto...</option>';
+
+  if (indexedData[cat]) {
+    const names = Object.keys(indexedData[cat]).sort();
+    names.forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      productSelect.appendChild(opt);
+    });
+  }
+
+  window.currentCategory = cat;
+  goToStep(2);
+}
+
+function selectProduct(name) {
+  const measureSelect = document.getElementById("measureSelect");
+  measureSelect.innerHTML = '<option value="">Selecciona Medida...</option>';
+  measureSelect.disabled = !name;
+
+  if (name && indexedData[window.currentCategory][name]) {
+    const measuresSorted = indexedData[window.currentCategory][name].sort(
+      (a, b) => a.medida.localeCompare(b.medida),
+    );
+    measuresSorted.forEach((m) => {
+      const opt = document.createElement("option");
+      opt.value = m.medida;
+      opt.textContent = m.medida;
+      measureSelect.appendChild(opt);
+    });
+  }
+}
+
+function selectMeasure(measure) {
+  if (!measure) return;
+  const productName = document.getElementById("productSelect").value;
+  const item = indexedData[window.currentCategory][productName].find(
+    (i) => i.medida === measure,
+  );
+
+  if (item) {
+    currentItem = item;
+    renderCalculationView(item);
+    goToStep(3);
+  }
+}
+
+function renderCalculationView(item) {
+  const display = document.getElementById("priceDisplay");
+  const sfBadge =
+    item.sf !== null
+      ? `<div class="glass" style="padding: 1rem; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Sin Factura (SF)</div>
+                    <div style="font-size: 1.5rem; font-weight: 700;">${item.sf} Bs.</div>
+                </div>`
+      : "";
+
+  display.innerHTML = `
+        <div class="glass-card animate-fade-in" style="border-left: 4px solid var(--primary);">
+            <button class="btn glass" onclick="goToStep(2)" style="margin-bottom: 1.5rem; padding: 0.5rem 1rem;">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <div style="margin-bottom: 1.5rem;">
+                <span class="badge badge-cf" style="margin-bottom: 0.5rem;">${item.categoria}</span>
+                <h2 style="font-size: 1.5rem;">${item.nombre}</h2>
+                <p style="color: var(--text-muted); font-weight: 500;">${item.medida}</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="glass" style="padding: 1rem; text-align: center;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Precio Unitario (CF)</div>
+                    <div style="font-size: 1.5rem; font-weight: 700;">${item.cf} Bs.</div>
+                </div>
+                ${sfBadge}
+                <div class="glass" style="padding: 1rem; text-align: center; border: 1px solid var(--primary);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Total Cotizado</div>
+                    <div id="liveTotal" style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${item.cf} Bs.</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Cantidad a solicitar</label>
+                <div class="quantity-control">
+                    <button class="qty-btn" onclick="updateQty(-1)"><i class="fas fa-minus"></i></button>
+                    <input type="number" id="qtyInput" value="1" min="1" style="width: 60px; text-align: center; border: none; background: transparent; color: var(--text-main); font-weight: 700; font-size: 1.25rem;">
+                    <button class="qty-btn" onclick="updateQty(1)"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="addToCart()">
+                <i class="fas fa-cart-plus"></i> Agregar a mi Proforma
+            </button>
+        </div>
+    `;
+
+  document
+    .getElementById("qtyInput")
+    .addEventListener("input", (e) => calculateLiveTotal(e.target.value));
+}
+
+function updateQty(delta) {
+  const input = document.getElementById("qtyInput");
+  let val = parseInt(input.value) + delta;
+  if (val < 1) val = 1;
+  input.value = val;
+  calculateLiveTotal(val);
+}
+
+function calculateLiveTotal(qty) {
+  if (!currentItem) return;
+  const total = (parseFloat(currentItem.cf) * qty).toFixed(1);
+  document.getElementById("liveTotal").textContent = `${total} Bs.`;
+}
+
+function addToCart() {
+  const qty = parseInt(document.getElementById("qtyInput").value);
+  const existingIndex = cart.findIndex((i) => i.id === currentItem.id);
+
+  if (existingIndex > -1) {
+    cart[existingIndex].qty += qty;
+  } else {
+    cart.push({ ...currentItem, qty: qty });
+  }
+
+  saveCart();
+  updateCartUI();
+  goToStep(1);
+}
+
+function saveCart() {
+  localStorage.setItem("proforma", JSON.stringify(cart));
+}
+
+function updateCartUI() {
+  const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
+  document.getElementById("cartCount").textContent = totalItems;
+  const btn = document.getElementById("proformaBtn");
+  if (totalItems > 0) btn.classList.remove("hidden");
+  else btn.classList.add("hidden");
+}
+
+function renderCart() {
+  const container = document.getElementById("cartItems");
+  const totalDisplay = document.getElementById("cartTotal");
+  let total = 0;
+
+  container.innerHTML = "";
+  if (cart.length === 0) {
+    container.innerHTML =
+      '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu proforma está vacía.</p>';
+    totalDisplay.textContent = "0 Bs.";
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    const subtotal = (parseFloat(item.cf) * item.qty).toFixed(1);
+    total += parseFloat(subtotal);
+
+    const div = document.createElement("div");
+    div.className = "glass";
+    div.style.padding = "1rem";
+    div.style.marginBottom = "1rem";
+    div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">${item.categoria}</div>
+                    <div style="font-weight: 600; font-size: 1rem;">${item.nombre}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">${item.medida}</div>
+                    <div style="margin-top: 0.5rem; font-weight: 500; font-size: 0.9rem;"> Cant. ${item.qty} | P.U. ${item.cf} Bs.</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                    <button class="glass" onclick="removeFromCart(${index})" style="padding: 0.4rem; color: #ef4444; border: none; font-size: 0.8rem; border-radius: 8px;"><i class="fas fa-trash-alt"></i></button>
+                    <div style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">${subtotal} Bs.</div>
+                </div>
+            </div>
+        `;
+    container.appendChild(div);
+  });
+
+  totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  saveCart();
+  renderCart();
+  updateCartUI();
+  if (cart.length === 0)
+    document.getElementById("proformaModal").style.display = "none";
+}
+
+function clearCart() {
+  if (confirm("¿Deseas vaciar toda la proforma?")) {
+    cart = [];
+    saveCart();
+    updateCartUI();
+    document.getElementById("proformaModal").style.display = "none";
+  }
+}
+
+function sendToWhatsApp() {
+  const client = JSON.parse(localStorage.getItem("registeredClient"));
+  let message = `Hola, soy ${client.optica.toUpperCase()}.\nQuisiera cotizar:\n\n`;
+
+  cart.forEach((item) => {
+    message += `subcategoria: ${item.nombre}\n`;
+    message += `Medida: ${item.medida}\n`;
+    message += `Cantidad: ${item.qty}\n`;
+    message += `-------------------------------------------\n`;
+  });
+
+  message += `Gracias.`;
+
+  const encoded = encodeURIComponent(message);
+  window.open(`https://wa.me/59163418141?text=${encoded}`, "_blank");
+}
+
+function hideLoading() {
+  const overlay = document.getElementById("loadingOverlay");
+  if (overlay) {
+    overlay.style.opacity = "0";
+    setTimeout(() => (overlay.style.display = "none"), 500);
+  }
+}
