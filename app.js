@@ -1,6 +1,6 @@
 /**
- * LP Opticas - Professional Quotation Engine (Autocomplete Edition)
- * Optimized for multi-step flow and real-time filtering
+ * LP Opticas - Professional Quotation Engine (Mobile Optimized)
+ * Optimized for multi-step flow and reliable mobile search
  */
 
 // State
@@ -9,6 +9,8 @@ let indexedData = {}; // { Category: { ProductName: [Items] } }
 let cart = JSON.parse(localStorage.getItem("proforma")) || [];
 let currentItem = null;
 let currentCategory = null;
+
+const isMobile = () => window.innerWidth <= 768;
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -65,6 +67,7 @@ function setupEventListeners() {
   setupAutocomplete(
     document.getElementById("productInput"),
     document.getElementById("productSuggestions"),
+    document.getElementById("searchProductBtn"),
     () => Object.keys(indexedData[currentCategory] || {}).sort(),
     (val) => selectProduct(val),
   );
@@ -73,6 +76,7 @@ function setupEventListeners() {
   setupAutocomplete(
     document.getElementById("measureInput"),
     document.getElementById("measureSuggestions"),
+    document.getElementById("searchMeasureBtn"),
     () => {
       const productName = document.getElementById("productInput").value;
       if (!productName || !indexedData[currentCategory][productName]) return [];
@@ -90,15 +94,18 @@ function setupEventListeners() {
 }
 
 /**
- * Reusable Autocomplete Logic
+ * Enhanced Autocomplete Logic with Search Button Support
  */
-function setupAutocomplete(input, list, getOptionsFn, onSelectFn) {
+function setupAutocomplete(input, list, searchBtn, getOptionsFn, onSelectFn) {
   let selectedIndex = -1;
 
-  input.addEventListener("input", (e) => {
-    const value = e.target.value.toLowerCase().trim();
+  const triggerSearch = () => {
+    const value = input.value.toLowerCase().trim();
     const options = getOptionsFn();
-    const filtered = options.filter((opt) => opt.toLowerCase().includes(value));
+    const filtered =
+      value === ""
+        ? options
+        : options.filter((opt) => opt.toLowerCase().includes(value));
 
     renderSuggestions(filtered, list, input, (selected) => {
       input.value = selected;
@@ -106,18 +113,32 @@ function setupAutocomplete(input, list, getOptionsFn, onSelectFn) {
       onSelectFn(selected);
     });
 
-    if (value && filtered.length > 0) {
+    if (filtered.length > 0) {
       list.classList.add("active");
+      // On mobile, blur the input to hide keyboard after clicking search
+      if (isMobile()) input.blur();
     } else {
       list.classList.remove("active");
+    }
+  };
+
+  input.addEventListener("input", (e) => {
+    // Automatic suggestions only for desktop
+    if (!isMobile()) {
+      triggerSearch();
     }
     selectedIndex = -1;
   });
 
-  input.addEventListener("keydown", (e) => {
-    const items = list.querySelectorAll(".suggestion-item");
-    if (!list.classList.contains("active")) return;
+  searchBtn.addEventListener("click", triggerSearch);
 
+  input.addEventListener("keydown", (e) => {
+    if (!list.classList.contains("active")) {
+      if (e.key === "Enter") triggerSearch();
+      return;
+    }
+
+    const items = list.querySelectorAll(".suggestion-item");
     if (e.key === "ArrowDown") {
       e.preventDefault();
       selectedIndex = (selectedIndex + 1) % items.length;
@@ -130,6 +151,8 @@ function setupAutocomplete(input, list, getOptionsFn, onSelectFn) {
       if (selectedIndex > -1) {
         e.preventDefault();
         items[selectedIndex].click();
+      } else {
+        triggerSearch();
       }
     } else if (e.key === "Escape") {
       list.classList.remove("active");
@@ -147,9 +170,12 @@ function setupAutocomplete(input, list, getOptionsFn, onSelectFn) {
     });
   }
 
-  // Close list when clicking outside
   document.addEventListener("click", (e) => {
-    if (!input.contains(e.target) && !list.contains(e.target)) {
+    if (
+      !input.contains(e.target) &&
+      !list.contains(e.target) &&
+      !searchBtn.contains(e.target)
+    ) {
       list.classList.remove("active");
     }
   });
@@ -188,14 +214,19 @@ function selectCategory(cat) {
   document.getElementById("productInput").value = "";
   document.getElementById("measureInput").value = "";
   document.getElementById("measureInput").disabled = true;
+  document.getElementById("searchMeasureBtn").disabled = true;
   goToStep(2);
 }
 
 function selectProduct(name) {
   const measureInput = document.getElementById("measureInput");
+  const measureBtn = document.getElementById("searchMeasureBtn");
   measureInput.value = "";
   measureInput.disabled = !name;
-  if (name) measureInput.focus();
+  measureBtn.disabled = !name;
+  if (name) {
+    if (!isMobile()) measureInput.focus();
+  }
 }
 
 function selectMeasure(measure) {
