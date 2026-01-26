@@ -117,6 +117,14 @@ function renderResults(filtered, containerId, onSelect) {
   }
   list.classList.add("active");
   list.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  // Mobile Fix: Scroll the input and list into view above keyboard
+  setTimeout(() => {
+    const inputId = containerId.replace("Results", "Input");
+    document
+      .getElementById(inputId)
+      .scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 100);
 }
 
 // NAVIGATION & FLOW
