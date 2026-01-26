@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catálogo Profesional | OPTIMARKET SRL</title>
+    <title>Catálogo OPTIMARKET SRL</title>
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -56,7 +56,7 @@
           "
         >
           <div>
-            <h1 class="text-gradient" style="font-size: 2.2rem">OPTIMARKET S.R.L</h1>
+            <h1 class="text-gradient" style="font-size: 2.2rem">OPTIMARKET SRL</h1>
             <p
               id="welcomeMessage"
               style="color: var(--text-muted); font-size: 0.9rem"
@@ -82,7 +82,7 @@
       <div class="steps">
         <div class="step active" id="step1-indicator">
           <div class="step-circle">1</div>
-          <div class="step-label">Categoria</div>
+          <div class="step-label">Categoría</div>
         </div>
         <div class="step" id="step2-indicator">
           <div class="step-circle">2</div>
@@ -129,7 +129,7 @@
                   class="fas fa-glasses"
                   style="font-size: 1.5rem; margin-bottom: 0.5rem"
                 ></i>
-                <span>BIFOCALES TERMINADOS</span>
+                <span>BIFOCALES TERMINADO</span>
               </button>
               <button
                 class="btn glass category-btn"
@@ -157,46 +157,37 @@
               <i class="fas fa-arrow-left"></i> Volver
             </button>
             <div class="form-group">
-              <label class="form-label">Producto</label>
-              <div class="search-group">
-                <div class="autocomplete-container">
-                  <input
-                    type="text"
-                    id="productInput"
-                    class="form-input"
-                    placeholder="Escribe producto..."
-                    autocomplete="off"
-                  />
-                  <div id="productSuggestions" class="suggestions-list"></div>
-                </div>
-                <button id="searchProductBtn" class="btn-search" title="Buscar">
+              <label class="form-label">Subcategoría (Producto)</label>
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="productInput"
+                  class="form-input"
+                  placeholder="Escribe producto..."
+                  autocomplete="off"
+                />
+                <button id="searchProductBtn" class="btn btn-primary">
                   <i class="fas fa-search"></i>
                 </button>
               </div>
+              <div id="productResults" class="results-list"></div>
             </div>
             <div class="form-group">
               <label class="form-label">Medida</label>
-              <div class="search-group">
-                <div class="autocomplete-container">
-                  <input
-                    type="text"
-                    id="measureInput"
-                    class="form-input"
-                    placeholder="Escribe medida..."
-                    autocomplete="off"
-                    disabled
-                  />
-                  <div id="measureSuggestions" class="suggestions-list"></div>
-                </div>
-                <button
-                  id="searchMeasureBtn"
-                  class="btn-search"
-                  title="Buscar"
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="measureInput"
+                  class="form-input"
+                  placeholder="Escribe medida..."
+                  autocomplete="off"
                   disabled
-                >
+                />
+                <button id="searchMeasureBtn" class="btn btn-primary" disabled>
                   <i class="fas fa-search"></i>
                 </button>
               </div>
+              <div id="measureResults" class="results-list"></div>
             </div>
           </div>
         </section>
