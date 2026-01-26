@@ -1,6 +1,6 @@
 /**
- * LP Opticas - Professional Quotation Engine (Mobile Optimized)
- * Optimized for multi-step flow and reliable mobile search
+ * LP Opticas - Professional Quotation Engine (Mobile Optimized Edition)
+ * Optimized for multi-step flow and Search-and-Select logic
  */
 
 // State
@@ -9,8 +9,6 @@ let indexedData = {}; // { Category: { ProductName: [Items] } }
 let cart = JSON.parse(localStorage.getItem("proforma")) || [];
 let currentItem = null;
 let currentCategory = null;
-
-const isMobile = () => window.innerWidth <= 768;
 
 document.addEventListener("DOMContentLoaded", () => {
   initApp();
@@ -63,29 +61,34 @@ function setupEventListeners() {
     btn.addEventListener("click", () => selectCategory(btn.dataset.cat));
   });
 
-  // Autocomplete for Products
-  setupAutocomplete(
-    document.getElementById("productInput"),
-    document.getElementById("productSuggestions"),
-    document.getElementById("searchProductBtn"),
-    () => Object.keys(indexedData[currentCategory] || {}).sort(),
-    (val) => selectProduct(val),
-  );
+  // Search Product
+  const searchProductBtn = document.getElementById("searchProductBtn");
+  const productInput = document.getElementById("productInput");
+  searchProductBtn.addEventListener("click", () => {
+    const val = productInput.value.toLowerCase().trim();
+    const options = Object.keys(indexedData[currentCategory] || {}).sort();
+    const filtered = options.filter((opt) => opt.toLowerCase().includes(val));
+    renderResults(filtered, "productResults", (selected) => {
+      productInput.value = selected;
+      selectProduct(selected);
+    });
+  });
 
-  // Autocomplete for Measures
-  setupAutocomplete(
-    document.getElementById("measureInput"),
-    document.getElementById("measureSuggestions"),
-    document.getElementById("searchMeasureBtn"),
-    () => {
-      const productName = document.getElementById("productInput").value;
-      if (!productName || !indexedData[currentCategory][productName]) return [];
-      return indexedData[currentCategory][productName]
-        .map((i) => i.medida)
-        .sort();
-    },
-    (val) => selectMeasure(val),
-  );
+  // Search Measure
+  const searchMeasureBtn = document.getElementById("searchMeasureBtn");
+  const measureInput = document.getElementById("measureInput");
+  searchMeasureBtn.addEventListener("click", () => {
+    const val = measureInput.value.toLowerCase().trim();
+    const productName = productInput.value;
+    const options = indexedData[currentCategory][productName]
+      .map((i) => i.medida)
+      .sort();
+    const filtered = options.filter((opt) => opt.toLowerCase().includes(val));
+    renderResults(filtered, "measureResults", (selected) => {
+      measureInput.value = selected;
+      selectMeasure(selected);
+    });
+  });
 
   document.getElementById("clearCart").addEventListener("click", clearCart);
   document
@@ -93,103 +96,27 @@ function setupEventListeners() {
     .addEventListener("click", sendToWhatsApp);
 }
 
-/**
- * Enhanced Autocomplete Logic with Search Button Support
- */
-function setupAutocomplete(input, list, searchBtn, getOptionsFn, onSelectFn) {
-  let selectedIndex = -1;
+function renderResults(filtered, containerId, onSelect) {
+  const list = document.getElementById(containerId);
+  list.innerHTML = "";
 
-  const triggerSearch = () => {
-    const value = input.value.toLowerCase().trim();
-    const options = getOptionsFn();
-    const filtered =
-      value === ""
-        ? options
-        : options.filter((opt) => opt.toLowerCase().includes(value));
-
-    renderSuggestions(filtered, list, input, (selected) => {
-      input.value = selected;
-      list.classList.remove("active");
-      onSelectFn(selected);
-    });
-
-    if (filtered.length > 0) {
-      list.classList.add("active");
-      // On mobile, blur the input to hide keyboard after clicking search
-      if (isMobile()) input.blur();
-    } else {
-      list.classList.remove("active");
-    }
-  };
-
-  input.addEventListener("input", (e) => {
-    // Automatic suggestions only for desktop
-    if (!isMobile()) {
-      triggerSearch();
-    }
-    selectedIndex = -1;
-  });
-
-  searchBtn.addEventListener("click", triggerSearch);
-
-  input.addEventListener("keydown", (e) => {
-    if (!list.classList.contains("active")) {
-      if (e.key === "Enter") triggerSearch();
-      return;
-    }
-
-    const items = list.querySelectorAll(".suggestion-item");
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex + 1) % items.length;
-      updateSelection(items);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-      updateSelection(items);
-    } else if (e.key === "Enter" || e.key === "Tab") {
-      if (selectedIndex > -1) {
-        e.preventDefault();
-        items[selectedIndex].click();
-      } else {
-        triggerSearch();
-      }
-    } else if (e.key === "Escape") {
-      list.classList.remove("active");
-    }
-  });
-
-  function updateSelection(items) {
-    items.forEach((item, idx) => {
-      if (idx === selectedIndex) {
-        item.classList.add("selected");
-        item.scrollIntoView({ block: "nearest" });
-      } else {
-        item.classList.remove("selected");
-      }
+  if (filtered.length === 0) {
+    list.innerHTML =
+      '<div class="result-item">No se encontraron resultados</div>';
+  } else {
+    filtered.forEach((text) => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = `<span>${text}</span> <i class="fas fa-chevron-right"></i>`;
+      div.addEventListener("click", () => {
+        onSelect(text);
+        list.classList.remove("active");
+      });
+      list.appendChild(div);
     });
   }
-
-  document.addEventListener("click", (e) => {
-    if (
-      !input.contains(e.target) &&
-      !list.contains(e.target) &&
-      !searchBtn.contains(e.target)
-    ) {
-      list.classList.remove("active");
-    }
-  });
-}
-
-function renderSuggestions(filtered, list, input, onSelect) {
-  list.innerHTML = "";
-  filtered.forEach((text) => {
-    const div = document.createElement("div");
-    div.className = "suggestion-item";
-    div.textContent = text;
-    div.addEventListener("click", () => onSelect(text));
-    list.appendChild(div);
-  });
+  list.classList.add("active");
+  list.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 // NAVIGATION & FLOW
@@ -215,18 +142,18 @@ function selectCategory(cat) {
   document.getElementById("measureInput").value = "";
   document.getElementById("measureInput").disabled = true;
   document.getElementById("searchMeasureBtn").disabled = true;
+  document.getElementById("productResults").classList.remove("active");
+  document.getElementById("measureResults").classList.remove("active");
   goToStep(2);
 }
 
 function selectProduct(name) {
   const measureInput = document.getElementById("measureInput");
-  const measureBtn = document.getElementById("searchMeasureBtn");
+  const searchMeasureBtn = document.getElementById("searchMeasureBtn");
   measureInput.value = "";
   measureInput.disabled = !name;
-  measureBtn.disabled = !name;
-  if (name) {
-    if (!isMobile()) measureInput.focus();
-  }
+  searchMeasureBtn.disabled = !name;
+  document.getElementById("productResults").classList.remove("active");
 }
 
 function selectMeasure(measure) {
@@ -238,6 +165,7 @@ function selectMeasure(measure) {
   if (item) {
     currentItem = item;
     renderCalculationView(item);
+    document.getElementById("measureResults").classList.remove("active");
     goToStep(3);
   }
 }
