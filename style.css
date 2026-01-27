@@ -2,9 +2,11 @@
 
 :root {
   /* Color Palette - Pristine White Theme */
-  --primary-hsl: 220, 90%, 56%;
-  --primary: hsl(var(--primary-hsl));
-  --primary-light: hsl(var(--primary-hsl), 95%);
+  --primary-h: 220;
+  --primary-s: 90%;
+  --primary-l: 56%;
+  --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+  --primary-light: hsl(var(--primary-h), var(--primary-s), 95%);
   --secondary: #64748b;
   --accent: #0ea5e9;
 
@@ -425,16 +427,17 @@ h3 {
 }
 
 .result-item:hover {
-  background: var(--primary-light);
-  color: var(--primary);
-}
-
-[data-theme="dark"] .result-item:hover {
   background: var(--primary);
   color: white;
+}
+
+.result-item:hover i {
+  color: white;
+  opacity: 1;
 }
 
 .result-item i {
   opacity: 0.5;
   font-size: 0.8rem;
+  transition: var(--transition);
 }
