@@ -222,7 +222,7 @@ function renderCalculationView(item) {
             </div>
 
             <button class="btn btn-primary" style="width: 100%;" onclick="addToCart()">
-                <i class="fas fa-cart-plus"></i> Agregar a mi Proforma
+                <i class="fas fa-cart-plus"></i> Agregar a mi carrito
             </button>
         </div>
     `;
@@ -277,7 +277,7 @@ function renderCart() {
 
   if (cart.length === 0) {
     container.innerHTML =
-      '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu proforma está vacía.</p>';
+      '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu carrito está vacío.</p>';
     totalDisplay.textContent = "0 Bs.";
     return;
   }
@@ -318,7 +318,7 @@ function removeFromCart(index) {
 }
 
 function clearCart() {
-  if (confirm("¿Deseas vaciar toda la proforma?")) {
+  if (confirm("¿Deseas vaciar el carrito?")) {
     cart = [];
     saveCart();
     updateCartUI();
@@ -328,13 +328,13 @@ function clearCart() {
 
 function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
-  let message = `Hola, soy ${client.optica.toUpperCase()}.\nQuisiera cotizar:\n\n`;
+  let message = `Hola, soy ${client.optica.toUpperCase()}.\n Este es mi Pedido:\n\n`;
   cart.forEach((item) => {
-    message += `subcategoria: ${item.nombre}\nMedida: ${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
+    message += `Material: ${item.nombre}\n ${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
   });
-  message += `Gracias.`;
+  message += `Gracias, Espero Confirmacion`;
   window.open(
-    `https://wa.me/59163418141?text=${encodeURIComponent(message)}`,
+    `https://wa.me/59167724661?text=${encodeURIComponent(message)}`,
     "_blank",
   );
 }
@@ -346,3 +346,4 @@ function hideLoading() {
     setTimeout(() => (overlay.style.display = "none"), 500);
   }
 }
+
