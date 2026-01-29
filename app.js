@@ -77,13 +77,17 @@ function setupEventListeners() {
   // Search Measure
   const searchMeasureBtn = document.getElementById("searchMeasureBtn");
   const measureInput = document.getElementById("measureInput");
+
   searchMeasureBtn.addEventListener("click", () => {
     const val = measureInput.value.toLowerCase().trim();
     const productName = productInput.value;
+
     const options = indexedData[currentCategory][productName]
       .map((i) => i.medida)
       .sort();
+
     const filtered = options.filter((opt) => opt.toLowerCase().includes(val));
+
     renderResults(filtered, "measureResults", (selected) => {
       measureInput.value = selected;
       selectMeasure(selected);
@@ -152,7 +156,41 @@ function selectCategory(cat) {
   document.getElementById("searchMeasureBtn").disabled = true;
   document.getElementById("productResults").classList.remove("active");
   document.getElementById("measureResults").classList.remove("active");
+  document.getElementById("measureAidSection").classList.add("hidden");
+
+  renderSearchAids(cat);
   goToStep(2);
+}
+
+function renderSearchAids(cat) {
+  const container = document.getElementById("searchAids");
+  const section = document.getElementById("searchAidSection");
+  container.innerHTML = "";
+
+  const aids = {
+    Lentilla: ["Organico", "Vidrio"],
+    "Material Listo": ["Bifocal", "Progresivo", "Invisible"],
+    Block: ["Bifocal", "Progresivo", "Invisible"],
+  };
+
+  const terms = aids[cat] || [];
+  if (terms.length > 0) {
+    terms.forEach((term) => {
+      const btn = document.createElement("button");
+      btn.className = "search-aid-tag";
+      btn.innerHTML = `<i class="fas fa-search"></i> ${term}`;
+      btn.onclick = () => {
+        const input = document.getElementById("productInput");
+        input.value = term;
+        // Trigger search
+        document.getElementById("searchProductBtn").click();
+      };
+      container.appendChild(btn);
+    });
+    section.classList.remove("hidden");
+  } else {
+    section.classList.add("hidden");
+  }
 }
 
 function selectProduct(name) {
@@ -162,6 +200,43 @@ function selectProduct(name) {
   measureInput.disabled = !name;
   searchMeasureBtn.disabled = !name;
   document.getElementById("productResults").classList.remove("active");
+
+  if (name) {
+    renderMeasureAids(currentCategory);
+  } else {
+    document.getElementById("measureAidSection").classList.add("hidden");
+  }
+}
+
+function renderMeasureAids(cat) {
+  const container = document.getElementById("measureAids");
+  const section = document.getElementById("measureAidSection");
+  container.innerHTML = "";
+
+  const aids = {
+    Lentilla: ["cil", "+1.50", "-1.50", "+1.50-1.50", "-1.50-1.50"],
+    "Material Listo": ["+1.00_Adds"],
+    Block: ["225", "250", "275"],
+  };
+
+  const terms = aids[cat] || [];
+  if (terms.length > 0) {
+    terms.forEach((term) => {
+      const btn = document.createElement("button");
+      btn.className = "search-aid-tag";
+      btn.innerHTML = `<i class="fas fa-magic"></i> ${term}`;
+      btn.onclick = () => {
+        const input = document.getElementById("measureInput");
+        input.value = term;
+        // Trigger search
+        document.getElementById("searchMeasureBtn").click();
+      };
+      container.appendChild(btn);
+    });
+    section.classList.remove("hidden");
+  } else {
+    section.classList.add("hidden");
+  }
 }
 
 function selectMeasure(measure) {
@@ -248,13 +323,28 @@ function calculateLiveTotal(qty) {
 
 // CART
 function addToCart() {
-  const qty = parseInt(document.getElementById("qtyInput").value);
+  const qtyInput = document.getElementById("qtyInput");
+  const qty = parseInt(qtyInput.value);
   const existingIndex = cart.findIndex((i) => i.id === currentItem.id);
-  if (existingIndex > -1) cart[existingIndex].qty += qty;
-  else cart.push({ ...currentItem, qty: qty });
+
+  if (existingIndex > -1) {
+    cart[existingIndex].qty += qty;
+  } else {
+    cart.push({ ...currentItem, qty: qty });
+  }
+
   saveCart();
   updateCartUI();
-  goToStep(1);
+
+  const keepMaterial = document.getElementById("keepMaterialToggle").checked;
+  if (keepMaterial) {
+    // Stay in Step 2, clear measure but keep product
+    document.getElementById("measureInput").value = "";
+    document.getElementById("measureResults").classList.remove("active");
+    goToStep(2);
+  } else {
+    goToStep(1);
+  }
 }
 
 function saveCart() {
@@ -295,7 +385,19 @@ function renderCart() {
                     <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">${item.categoria}</div>
                     <div style="font-weight: 600; font-size: 1rem;">${item.nombre}</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted);">${item.medida}</div>
-                    <div style="margin-top: 0.5rem; font-weight: 500; font-size: 0.9rem;"> Cant. ${item.qty} | P.U. ${item.cf} Bs.</div>
+                    <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; font-weight: 500;">Cant.</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--border-glass); padding: 0.2rem 0.5rem; border-radius: 8px;">
+                            <button onclick="updateCartItemQty(${index}, -1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fas fa-minus" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <span style="font-weight: 700; min-width: 20px; text-align: center;">${item.qty}</span>
+                            <button onclick="updateCartItemQty(${index}, 1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                            </button>
+                        </div>
+                        <span style="font-size: 0.9rem; font-weight: 500;">| P.U. ${item.cf} Bs.</span>
+                    </div>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
                     <button class="glass" onclick="removeFromCart(${index})" style="padding: 0.4rem; color: #ef4444; border: none; font-size: 0.8rem; border-radius: 8px;"><i class="fas fa-trash-alt"></i></button>
@@ -306,6 +408,16 @@ function renderCart() {
     container.appendChild(div);
   });
   totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
+}
+
+function updateCartItemQty(index, delta) {
+  if (cart[index]) {
+    cart[index].qty += delta;
+    if (cart[index].qty < 1) cart[index].qty = 1;
+    saveCart();
+    renderCart();
+    updateCartUI();
+  }
 }
 
 function removeFromCart(index) {
@@ -330,13 +442,20 @@ function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
   let message = `Hola, soy ${client.optica.toUpperCase()}.\n Este es mi Pedido:\n\n`;
   cart.forEach((item) => {
-    message += `Material: ${item.nombre}\n ${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
+    message += `Material:${item.nombre}\n${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
   });
   message += `Gracias, Espero Confirmacion`;
   window.open(
     `https://wa.me/59167724661?text=${encodeURIComponent(message)}`,
     "_blank",
   );
+
+  // Clear cart after sending
+  cart = [];
+  saveCart();
+  updateCartUI();
+  document.getElementById("proformaModal").style.display = "none";
+  goToStep(1);
 }
 
 function hideLoading() {
