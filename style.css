@@ -2,13 +2,13 @@
 
 :root {
   /* Color Palette - Pristine White Theme */
-  --primary-h: 220;
-  --primary-s: 90%;
-  --primary-l: 56%;
+  --primary-h: 0;
+  --primary-s: 85%;
+  --primary-l: 50%;
   --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
   --primary-light: hsl(var(--primary-h), var(--primary-s), 95%);
-  --secondary: #64748b;
-  --accent: #0ea5e9;
+  --secondary: #1e293b;
+  --accent: #dc2626;
 
   --bg-body: #f8fafc;
   --bg-card: rgba(255, 255, 255, 0.7);
@@ -87,7 +87,7 @@ h3 {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), #000);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -108,9 +108,9 @@ h3 {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--primary), #991b1b);
   color: white;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .btn-primary:hover {
@@ -441,3 +441,56 @@ h3 {
   font-size: 0.8rem;
   transition: var(--transition);
 }
+
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
+    padding: 1rem 0;
+  }
+}
+
+.search-aid-box {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.search-aid-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.search-aid-tag {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-aid-tag:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
+}
+
+.search-aid-tag i {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
