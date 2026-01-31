@@ -250,6 +250,21 @@ h3 {
   color: var(--primary);
 }
 
+@media (max-width: 480px) {
+  .step-label {
+    display: none;
+  }
+  .step-circle {
+    margin-bottom: 0;
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  .step::before {
+    top: 14px;
+  }
+}
+
 /* Proforma / Cart Styles - Re-located to Header */
 .proforma-badge {
   background: var(--primary);
@@ -425,6 +440,12 @@ h3 {
   opacity: 0.5;
   font-size: 0.8rem;
   transition: var(--transition);
+}
+
+/* Mobile Optimized Results */
+.result-item {
+  padding: 1.25rem 1rem; /* Larger touch area */
+  font-size: 1.05rem;
 }
 
 @media (max-width: 768px) {
