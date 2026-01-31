@@ -12,10 +12,6 @@
     <link rel="icon" type="image/png" href="favicon.png" />
   </head>
   <body>
-    <button class="theme-toggle glass" id="themeToggle">
-      <i class="fas fa-moon"></i>
-    </button>
-
     <div class="flex-center">
       <div class="container" style="max-width: 500px">
         <div class="glass-card animate-fade-in">
@@ -164,22 +160,6 @@
 
         window.location.href = "index.html";
       });
-
-      // Theme Toggle
-      const themeBtn = document.getElementById("themeToggle");
-      themeBtn.addEventListener("click", () => {
-        const isDark = document.body.getAttribute("data-theme") === "dark";
-        document.body.setAttribute("data-theme", isDark ? "light" : "dark");
-        themeBtn.innerHTML = isDark
-          ? '<i class="fas fa-moon"></i>'
-          : '<i class="fas fa-sun"></i>';
-        localStorage.setItem("theme", isDark ? "light" : "dark");
-      });
-
-      if (localStorage.getItem("theme") === "dark") {
-        document.body.setAttribute("data-theme", "dark");
-        themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-      }
     </script>
   </body>
 </html>
