@@ -35,10 +35,6 @@
       <p style="margin-top: 1rem; font-weight: 500">Cargando ...</p>
     </div>
 
-    <button class="theme-toggle glass" id="themeToggle">
-      <i class="fas fa-moon"></i>
-    </button>
-
     <!-- Hidden Form for Silent Visit Tracking -->
     <form name="visitas" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="optica" />
@@ -378,22 +374,6 @@
       window.addEventListener("click", (e) => {
         if (e.target === modal) modal.style.display = "none";
       });
-
-      // Theme Toggle logic remains the same
-      const themeBtn = document.getElementById("themeToggle");
-      themeBtn.addEventListener("click", () => {
-        const isDark = document.body.getAttribute("data-theme") === "dark";
-        document.body.setAttribute("data-theme", isDark ? "light" : "dark");
-        themeBtn.innerHTML = isDark
-          ? '<i class="fas fa-moon"></i>'
-          : '<i class="fas fa-sun"></i>';
-        localStorage.setItem("theme", isDark ? "light" : "dark");
-      });
-      if (localStorage.getItem("theme") === "dark") {
-        document.body.setAttribute("data-theme", "dark");
-        themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
-      }
     </script>
   </body>
 </html>
-
