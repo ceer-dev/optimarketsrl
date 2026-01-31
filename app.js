@@ -375,63 +375,15 @@ function updateCartUI() {
   else btn.classList.add("hidden");
 }
 
-function renderCart() {
-  const container = document.getElementById("cartItems");
-  const totalDisplay = document.getElementById("cartTotal");
-  let total = 0;
-  container.innerHTML = "";
-
-  if (cart.length === 0) {
-    container.innerHTML =
-      '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu carrito está vacío.</p>';
-    totalDisplay.textContent = "0 Bs.";
-    return;
-  }
-
-  cart.forEach((item, index) => {
-    const subtotal = (parseFloat(item.cf) * item.qty).toFixed(1);
-    total += parseFloat(subtotal);
-    const div = document.createElement("div");
-    div.className = "glass";
-    div.style.padding = "1rem";
-    div.style.marginBottom = "1rem";
-    div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-                <div style="flex: 1;">
-                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">${item.categoria}</div>
-                    <div style="font-weight: 600; font-size: 1rem;">${item.nombre}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted);">${item.medida}</div>
-                    <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 0.9rem; font-weight: 500;">Cant.</span>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--border-glass); padding: 0.2rem 0.5rem; border-radius: 8px;">
-                            <button onclick="updateCartItemQty(${index}, -1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="fas fa-minus" style="font-size: 0.7rem;"></i>
-                            </button>
-                            <span style="font-weight: 700; min-width: 20px; text-align: center;">${item.qty}</span>
-                            <button onclick="updateCartItemQty(${index}, 1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
-                            </button>
-                        </div>
-                        <span style="font-size: 0.9rem; font-weight: 500;">| P.U. ${item.cf} Bs.</span>
-                    </div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
-                    <button class="glass" onclick="removeFromCart(${index})" style="padding: 0.4rem; color: #ef4444; border: none; font-size: 0.8rem; border-radius: 8px;"><i class="fas fa-trash-alt"></i></button>
-                    <div style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">${subtotal} Bs.</div>
-                </div>
-            </div>
-        `;
-    container.appendChild(div);
-  });
-  totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
-}
+// Obsolete renderCart removed.
 
 function updateCartItemQty(index, delta) {
   if (cart[index]) {
     cart[index].qty += delta;
     if (cart[index].qty < 1) cart[index].qty = 1;
     saveCart();
-    renderCart();
+    // renderCart(); // Removed
+    updateStep4Cart(); // Update Step 4 directly
     updateCartUI();
   }
 }
@@ -439,10 +391,9 @@ function updateCartItemQty(index, delta) {
 function removeFromCart(index) {
   cart.splice(index, 1);
   saveCart();
-  renderCart();
+  // renderCart(); // Removed
+  updateStep4Cart(); // Update Step 4 view
   updateCartUI();
-  if (cart.length === 0)
-    document.getElementById("proformaModal").style.display = "none";
 }
 
 function clearCart() {
@@ -450,7 +401,7 @@ function clearCart() {
     cart = [];
     saveCart();
     updateCartUI();
-    document.getElementById("proformaModal").style.display = "none";
+    updateStep4Cart(); // Update Step 4 view
   }
 }
 
@@ -525,17 +476,6 @@ function updateStep4Cart() {
 }
 
 // Override original update/remove to also refresh step 4
-const originalUpdateQty = updateCartItemQty;
-updateCartItemQty = function (index, delta) {
-  originalUpdateQty(index, delta);
-  updateStep4Cart();
-};
-
-const originalRemove = removeFromCart;
-removeFromCart = function (index) {
-  originalRemove(index);
-  updateStep4Cart();
-};
 
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
