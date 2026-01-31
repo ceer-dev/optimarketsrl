@@ -1,7 +1,3 @@
-/**
- * LP Opticas - Professional Quotation Engine (Mobile Optimized Edition)
- * Optimized for multi-step flow and Search-and-Select logic
- */
 
 // State
 let masterData = [];
@@ -94,10 +90,19 @@ function setupEventListeners() {
     });
   });
 
-  document.getElementById("clearCart").addEventListener("click", clearCart);
+  // Step 4 Buttons
   document
-    .getElementById("sendWhatsApp")
+    .getElementById("step4ClearCart")
+    .addEventListener("click", clearCart);
+  document
+    .getElementById("step4SendWhatsApp")
     .addEventListener("click", sendToWhatsApp);
+
+  // Floating Cart Button -> Go to Step 4
+  document.getElementById("proformaBtn").addEventListener("click", () => {
+    updateStep4Cart();
+    goToStep(4);
+  });
 }
 
 function renderResults(filtered, containerId, onSelect) {
@@ -296,9 +301,14 @@ function renderCalculationView(item) {
                 </div>
             </div>
 
-            <button class="btn btn-primary" style="width: 100%;" onclick="addToCart()">
-                <i class="fas fa-cart-plus"></i> Agregar a mi carrito
-            </button>
+            <div style="display: grid; gap: 1rem;">
+                <button class="btn glass" style="width: 100%; border: 1px solid var(--primary); color: var(--primary);" onclick="addToCart('continue')">
+                    <i class="fas fa-cart-plus"></i> Agregar y Seguir Comprando
+                </button>
+                 <button class="btn btn-primary" style="width: 100%;" onclick="addToCart('finish')">
+                    <i class="fas fa-check"></i> Agregar y Finalizar Pedido
+                </button>
+            </div>
         </div>
     `;
 
@@ -322,7 +332,7 @@ function calculateLiveTotal(qty) {
 }
 
 // CART
-function addToCart() {
+function addToCart(action) {
   const qtyInput = document.getElementById("qtyInput");
   const qty = parseInt(qtyInput.value);
   const existingIndex = cart.findIndex((i) => i.id === currentItem.id);
@@ -335,6 +345,12 @@ function addToCart() {
 
   saveCart();
   updateCartUI();
+
+  if (action === "finish") {
+    updateStep4Cart();
+    goToStep(4);
+    return;
+  }
 
   const keepMaterial = document.getElementById("keepMaterialToggle").checked;
   if (keepMaterial) {
@@ -454,9 +470,72 @@ function sendToWhatsApp() {
   cart = [];
   saveCart();
   updateCartUI();
-  document.getElementById("proformaModal").style.display = "none";
+  updateStep4Cart();
   goToStep(1);
 }
+
+function updateStep4Cart() {
+  const container = document.getElementById("step4CartItems");
+  const totalDisplay = document.getElementById("step4Total");
+  let total = 0;
+  container.innerHTML = "";
+
+  if (cart.length === 0) {
+    container.innerHTML =
+      '<p style="text-align: center; padding: 2rem; color: var(--text-muted); opacity: 0.6;">Tu carrito está vacío.</p>';
+    totalDisplay.textContent = "0 Bs.";
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    const subtotal = (parseFloat(item.cf) * item.qty).toFixed(1);
+    total += parseFloat(subtotal);
+    const div = document.createElement("div");
+    div.className = "glass";
+    div.style.padding = "1rem";
+    div.style.marginBottom = "1rem";
+    div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <div style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">${item.categoria}</div>
+                    <div style="font-weight: 600; font-size: 1rem;">${item.nombre}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">${item.medida}</div>
+                    <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 0.9rem; font-weight: 500;">Cant.</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--border-glass); padding: 0.2rem 0.6rem; border-radius: 8px;">
+                            <button onclick="updateCartItemQty(${index}, -1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fas fa-minus" style="font-size: 0.7rem;"></i>
+                            </button>
+                            <span style="font-weight: 700; min-width: 24px; text-align: center;">${item.qty}</span>
+                            <button onclick="updateCartItemQty(${index}, 1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                    <div style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">${subtotal} Bs.</div>
+                     <button class="glass" onclick="removeFromCart(${index})" style="padding: 0.5rem; color: #ef4444; border: none; font-size: 0.9rem; border-radius: 8px;"><i class="fas fa-trash-alt"></i> Eliminar</button>
+                </div>
+            </div>
+        `;
+    container.appendChild(div);
+  });
+  totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
+}
+
+// Override original update/remove to also refresh step 4
+const originalUpdateQty = updateCartItemQty;
+updateCartItemQty = function (index, delta) {
+  originalUpdateQty(index, delta);
+  updateStep4Cart();
+};
+
+const originalRemove = removeFromCart;
+removeFromCart = function (index) {
+  originalRemove(index);
+  updateStep4Cart();
+};
 
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
@@ -465,4 +544,3 @@ function hideLoading() {
     setTimeout(() => (overlay.style.display = "none"), 500);
   }
 }
-
