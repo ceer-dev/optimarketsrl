@@ -448,7 +448,18 @@ function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
   let message = `Hola, soy ${client.optica.toUpperCase()}.\n Este es mi Pedido:\n\n`;
   cart.forEach((item) => {
-    message += `Material: ${item.nombre}\nMedida: ${item.medida}\nCantidad: ${item.qty} ${getQuantityLabel(item.categoria)}\n-------------------------------------------\n`;
+    // Clean redundant "Medida:" prefix if deeper data has it
+    // Example: "Medida: Medida: +0.25" -> "+0.25"
+    // Also remove adds label if user wants just value, but user said "Medida: +1.25" should be "Medida: +1.25"
+    // The requirement was: "Medida: Medida: +1.25-1.75" -> "Medida: +1.25-1.75"
+    // So we remove the prefix from item.medida string if it exists, then prepend our own "Medida: "
+
+    let cleanMeasure = item.medida.replace(/^Medida:\s*/i, "").trim();
+
+    // Special formatting for quantity based on category
+    const qtyString = formatQuantityForWhatsApp(item.categoria, item.qty);
+
+    message += `Material: ${item.nombre}\nMedida: ${cleanMeasure}\nCantidad: ${qtyString}\n-------------------------------------------\n`;
   });
 
   const pmInput = document.querySelector('input[name="paymentMethod"]:checked');
@@ -468,6 +479,28 @@ function sendToWhatsApp() {
   updateCartUI();
   updateStep4Cart();
   goToStep(1);
+}
+
+function formatQuantityForWhatsApp(category, qty) {
+  if (category === "Lentilla") {
+    if (qty === 1) return "1/2 Par";
+
+    // Check if even or odd
+    const pairs = Math.floor(qty / 2);
+    const isOdd = qty % 2 !== 0;
+
+    if (pairs === 0 && isOdd) return "1/2 Par"; // Covered by qty===1 but good for safety
+
+    if (pairs > 0 && !isOdd) return `${pairs} ${pairs === 1 ? "Par" : "Pares"}`;
+
+    if (pairs > 0 && isOdd) return `${pairs} ${pairs === 1 ? "Par" : "Pares"} y Medio`;
+  }
+
+  if (category === "Material Listo" || category === "Block") {
+    return `${qty} ${qty === 1 ? "Par" : "Pares"}`;
+  }
+
+  return `${qty} Unidad(es)`;
 }
 
 function updateStep4Cart() {
