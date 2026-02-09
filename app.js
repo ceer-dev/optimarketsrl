@@ -82,7 +82,30 @@ function setupEventListeners() {
       .map((i) => i.medida)
       .sort();
 
-    const filtered = options.filter((opt) => opt.toLowerCase().includes(val));
+    // Logic:
+    // If user input has a separator (hyphen not at start), they want combined.
+    // If user input has NO separator, show ONLY single measures (hide combined).
+    // Exception: If the user is just typing "+" or "-", show relevant.
+
+    // Check for separator ignoring the first character (sign)
+    const hasSeparator = val.length > 1 && val.substring(1).includes("-");
+
+    const filtered = options.filter((opt) => {
+      const cleanOpt = opt.toLowerCase().replace("medida:", "").trim();
+      const optIsCombined =
+        cleanOpt.length > 1 && cleanOpt.substring(1).includes("-");
+
+      // Si NO hay separador → ocultar combinados
+      if (!hasSeparator && optIsCombined) return false;
+
+      // Si hay separador → deben empezar exactamente así
+      if (hasSeparator) {
+        return cleanOpt.startsWith(val);
+      }
+
+      // Esférico exacto
+      return cleanOpt === val;
+    });
 
     renderResults(filtered, "measureResults", (selected) => {
       measureInput.value = selected;
@@ -259,6 +282,12 @@ function selectMeasure(measure) {
 }
 
 // CALCULATION VIEW
+function getQuantityLabel(category) {
+  if (category === "Lentilla") return "Unidad (1 = medio par)";
+  if (category === "Material Listo" || category === "Block") return "Pares";
+  return "Unidad";
+}
+
 function renderCalculationView(item) {
   const display = document.getElementById("priceDisplay");
   const sfBadge =
@@ -293,7 +322,7 @@ function renderCalculationView(item) {
             </div>
 
             <div class="form-group">
-                <label class="form-label">Cantidad a solicitar</label>
+                <label class="form-label">Cantidad (${getQuantityLabel(item.categoria)})</label>
                 <div class="quantity-control">
                     <button class="qty-btn" onclick="updateQty(-1)"><i class="fas fa-minus"></i></button>
                     <input type="number" id="qtyInput" value="1" min="1" style="width: 60px; text-align: center; border: none; background: transparent; color: var(--text-main); font-weight: 700; font-size: 1.25rem;">
@@ -409,9 +438,15 @@ function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
   let message = `Hola, soy ${client.optica.toUpperCase()}.\n Este es mi Pedido:\n\n`;
   cart.forEach((item) => {
-    message += `Material:${item.nombre}\n${item.medida}\nCantidad: ${item.qty}\n-------------------------------------------\n`;
+    message += `Material: ${item.nombre}\nMedida: ${item.medida}\nCantidad: ${item.qty} ${getQuantityLabel(item.categoria)}\n-------------------------------------------\n`;
   });
-  message += `Gracias, Espero Confirmacion`;
+
+  const pmInput = document.querySelector('input[name="paymentMethod"]:checked');
+  const paymentMethod = pmInput ? pmInput.value : "NO DEFINIDO";
+  message += `\nMétodo de Pago: ${paymentMethod}\n`;
+
+
+  message += `\nGracias, Espero Confirmacion`;
   window.open(
     `https://wa.me/59167724661?text=${encodeURIComponent(message)}`,
     "_blank",
@@ -452,7 +487,7 @@ function updateStep4Cart() {
                     <div style="font-weight: 600; font-size: 1rem;">${item.nombre}</div>
                     <div style="font-size: 0.85rem; color: var(--text-muted);">${item.medida}</div>
                     <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-                        <span style="font-size: 0.9rem; font-weight: 500;">Cant.</span>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Cant. (${getQuantityLabel(item.categoria)})</span>
                         <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--border-glass); padding: 0.2rem 0.6rem; border-radius: 8px;">
                             <button onclick="updateCartItemQty(${index}, -1)" style="background: var(--primary); border: none; color: white; border-radius: 4px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
                                 <i class="fas fa-minus" style="font-size: 0.7rem;"></i>
@@ -476,7 +511,7 @@ function updateStep4Cart() {
 }
 
 // Override original update/remove to also refresh step 4
-
+// Added getQuantityLabel helper above
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
   if (overlay) {
