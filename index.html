@@ -312,6 +312,20 @@
               </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 2rem;">
+              <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Método de Pago</label>
+              <div style="display: flex; gap: 1rem;">
+                <label class="glass" style="flex: 1; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; border-radius: 12px;">
+                  <input type="radio" name="paymentMethod" value="QR" checked style="accent-color: var(--primary); transform: scale(1.2);">
+                  <i class="fas fa-qrcode" style="font-size: 1.2rem;"></i> <span style="font-weight: 500;">PAGO POR QR</span>
+                </label>
+                <label class="glass" style="flex: 1; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; border-radius: 12px;">
+                  <input type="radio" name="paymentMethod" value="EFECTIVO" style="accent-color: var(--primary); transform: scale(1.2);">
+                  <i class="fas fa-money-bill-wave" style="font-size: 1.2rem;"></i> <span style="font-weight: 500;">EFECTIVO</span>
+                </label>
+              </div>
+            </div>
+
             <div style="display: grid; gap: 1rem">
               <button
                 class="btn btn-primary"
