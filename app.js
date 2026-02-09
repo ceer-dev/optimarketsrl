@@ -1,7 +1,7 @@
 
-// State
+
 let masterData = [];
-let indexedData = {}; // { Category: { ProductName: [Items] } }
+let indexedData = {}; 
 let cart = JSON.parse(localStorage.getItem("proforma")) || [];
 let currentItem = null;
 let currentCategory = null;
@@ -15,7 +15,7 @@ async function initApp() {
     const response = await fetch("precios.json");
     masterData = await response.json();
 
-    // Build Advanced Index
+   
     masterData.forEach((item) => {
       const cat = item.Categoria || item.categoria || "Otros";
       const name = item.Subcategoria || item.nombre || "Sin Nombre";
@@ -57,7 +57,7 @@ function setupEventListeners() {
     btn.addEventListener("click", () => selectCategory(btn.dataset.cat));
   });
 
-  // Search Product
+
   const searchProductBtn = document.getElementById("searchProductBtn");
   const productInput = document.getElementById("productInput");
   searchProductBtn.addEventListener("click", () => {
@@ -70,7 +70,7 @@ function setupEventListeners() {
     });
   });
 
-  // Search Measure
+
   const searchMeasureBtn = document.getElementById("searchMeasureBtn");
   const measureInput = document.getElementById("measureInput");
 
@@ -84,35 +84,35 @@ function setupEventListeners() {
 
     let filtered = [];
 
-    // Logic 1: Lentilla (Organics) - Exact Spherical vs Combined
+  
     if (currentCategory === "Lentilla") {
-      // Check for separator ignoring the first character (sign)
+
       const hasSeparator = val.length > 1 && val.substring(1).includes("-");
 
       filtered = options.filter((opt) => {
         const cleanOpt = opt.toLowerCase().replace("medida:", "").trim();
         const optIsCombined = cleanOpt.length > 1 && cleanOpt.substring(1).includes("-");
 
-        // If NO separator -> hide combined
+    
         if (!hasSeparator && optIsCombined) return false;
 
-        // If separator -> must match start
+    
         if (hasSeparator) {
           return cleanOpt.startsWith(val);
         }
 
-        // Exact spherical
+     
         return cleanOpt === val;
       });
     }
-    // Logic 2: Material Listo / Block (Bifocales) - Token Search
+   
     else {
-      // Allow searching for multiple parts (e.g. "4 100" for Base 4 Add 100)
+    
       const tokens = val.split(" ").filter(t => t.length > 0);
 
       filtered = options.filter((opt) => {
         const normOpt = opt.toLowerCase();
-        // All tokens must be present in the option string
+  
         return tokens.every(token => normOpt.includes(token));
       });
     }
@@ -123,7 +123,7 @@ function setupEventListeners() {
     });
   });
 
-  // Step 4 Buttons
+
   document
     .getElementById("step4ClearCart")
     .addEventListener("click", clearCart);
@@ -131,7 +131,6 @@ function setupEventListeners() {
     .getElementById("step4SendWhatsApp")
     .addEventListener("click", sendToWhatsApp);
 
-  // Floating Cart Button -> Go to Step 4
   document.getElementById("proformaBtn").addEventListener("click", () => {
     updateStep4Cart();
     goToStep(4);
@@ -160,7 +159,7 @@ function renderResults(filtered, containerId, onSelect) {
   list.classList.add("active");
   list.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  // Mobile Fix: Scroll the input and list into view above keyboard
+ 
   setTimeout(() => {
     const inputId = containerId.replace("Results", "Input");
     document
@@ -169,7 +168,7 @@ function renderResults(filtered, containerId, onSelect) {
   }, 100);
 }
 
-// NAVIGATION & FLOW
+
 function goToStep(step) {
   document
     .querySelectorAll(".step-content")
@@ -291,7 +290,7 @@ function selectMeasure(measure) {
   }
 }
 
-// CALCULATION VIEW
+
 function getQuantityLabel(category) {
   if (category === "Lentilla") return "Unidad (1 = medio par)";
   if (category === "Material Listo" || category === "Block") return "Pares";
@@ -370,7 +369,7 @@ function calculateLiveTotal(qty) {
   document.getElementById("liveTotal").textContent = `${total} Bs.`;
 }
 
-// CART
+
 function addToCart(action) {
   const qtyInput = document.getElementById("qtyInput");
   const qty = parseInt(qtyInput.value);
@@ -393,7 +392,7 @@ function addToCart(action) {
 
   const keepMaterial = document.getElementById("keepMaterialToggle").checked;
   if (keepMaterial) {
-    // Stay in Step 2, clear measure but keep product
+
     document.getElementById("measureInput").value = "";
     document.getElementById("measureResults").classList.remove("active");
     goToStep(2);
@@ -414,15 +413,15 @@ function updateCartUI() {
   else btn.classList.add("hidden");
 }
 
-// Obsolete renderCart removed.
+
 
 function updateCartItemQty(index, delta) {
   if (cart[index]) {
     cart[index].qty += delta;
     if (cart[index].qty < 1) cart[index].qty = 1;
     saveCart();
-    // renderCart(); // Removed
-    updateStep4Cart(); // Update Step 4 directly
+   
+    updateStep4Cart(); 
     updateCartUI();
   }
 }
@@ -430,8 +429,8 @@ function updateCartItemQty(index, delta) {
 function removeFromCart(index) {
   cart.splice(index, 1);
   saveCart();
-  // renderCart(); // Removed
-  updateStep4Cart(); // Update Step 4 view
+  
+  updateStep4Cart();
   updateCartUI();
 }
 
@@ -440,7 +439,7 @@ function clearCart() {
     cart = [];
     saveCart();
     updateCartUI();
-    updateStep4Cart(); // Update Step 4 view
+    updateStep4Cart(); 
   }
 }
 
@@ -448,15 +447,9 @@ function sendToWhatsApp() {
   const client = JSON.parse(localStorage.getItem("registeredClient"));
   let message = `Hola, soy ${client.optica.toUpperCase()}.\n Este es mi Pedido:\n\n`;
   cart.forEach((item) => {
-    // Clean redundant "Medida:" prefix if deeper data has it
-    // Example: "Medida: Medida: +0.25" -> "+0.25"
-    // Also remove adds label if user wants just value, but user said "Medida: +1.25" should be "Medida: +1.25"
-    // The requirement was: "Medida: Medida: +1.25-1.75" -> "Medida: +1.25-1.75"
-    // So we remove the prefix from item.medida string if it exists, then prepend our own "Medida: "
+
 
     let cleanMeasure = item.medida.replace(/^Medida:\s*/i, "").trim();
-
-    // Special formatting for quantity based on category
     const qtyString = formatQuantityForWhatsApp(item.categoria, item.qty);
 
     message += `Material: ${item.nombre}\nMedida: ${cleanMeasure}\nCantidad: ${qtyString}\n-------------------------------------------\n`;
@@ -473,7 +466,7 @@ function sendToWhatsApp() {
     "_blank",
   );
 
-  // Clear cart after sending
+  
   cart = [];
   saveCart();
   updateCartUI();
@@ -485,11 +478,11 @@ function formatQuantityForWhatsApp(category, qty) {
   if (category === "Lentilla") {
     if (qty === 1) return "1/2 Par";
 
-    // Check if even or odd
+ 
     const pairs = Math.floor(qty / 2);
     const isOdd = qty % 2 !== 0;
 
-    if (pairs === 0 && isOdd) return "1/2 Par"; // Covered by qty===1 but good for safety
+    if (pairs === 0 && isOdd) return "1/2 Par"; 
 
     if (pairs > 0 && !isOdd) return `${pairs} ${pairs === 1 ? "Par" : "Pares"}`;
 
@@ -553,8 +546,6 @@ function updateStep4Cart() {
   totalDisplay.textContent = `${total.toFixed(1)} Bs.`;
 }
 
-// Override original update/remove to also refresh step 4
-// Added getQuantityLabel helper above
 function hideLoading() {
   const overlay = document.getElementById("loadingOverlay");
   if (overlay) {
@@ -562,3 +553,4 @@ function hideLoading() {
     setTimeout(() => (overlay.style.display = "none"), 500);
   }
 }
+
