@@ -82,30 +82,40 @@ function setupEventListeners() {
       .map((i) => i.medida)
       .sort();
 
-    // Logic:
-    // If user input has a separator (hyphen not at start), they want combined.
-    // If user input has NO separator, show ONLY single measures (hide combined).
-    // Exception: If the user is just typing "+" or "-", show relevant.
+    let filtered = [];
 
-    // Check for separator ignoring the first character (sign)
-    const hasSeparator = val.length > 1 && val.substring(1).includes("-");
+    // Logic 1: Lentilla (Organics) - Exact Spherical vs Combined
+    if (currentCategory === "Lentilla") {
+      // Check for separator ignoring the first character (sign)
+      const hasSeparator = val.length > 1 && val.substring(1).includes("-");
 
-    const filtered = options.filter((opt) => {
-      const cleanOpt = opt.toLowerCase().replace("medida:", "").trim();
-      const optIsCombined =
-        cleanOpt.length > 1 && cleanOpt.substring(1).includes("-");
+      filtered = options.filter((opt) => {
+        const cleanOpt = opt.toLowerCase().replace("medida:", "").trim();
+        const optIsCombined = cleanOpt.length > 1 && cleanOpt.substring(1).includes("-");
 
-      // Si NO hay separador → ocultar combinados
-      if (!hasSeparator && optIsCombined) return false;
+        // If NO separator -> hide combined
+        if (!hasSeparator && optIsCombined) return false;
 
-      // Si hay separador → deben empezar exactamente así
-      if (hasSeparator) {
-        return cleanOpt.startsWith(val);
-      }
+        // If separator -> must match start
+        if (hasSeparator) {
+          return cleanOpt.startsWith(val);
+        }
 
-      // Esférico exacto
-      return cleanOpt === val;
-    });
+        // Exact spherical
+        return cleanOpt === val;
+      });
+    }
+    // Logic 2: Material Listo / Block (Bifocales) - Token Search
+    else {
+      // Allow searching for multiple parts (e.g. "4 100" for Base 4 Add 100)
+      const tokens = val.split(" ").filter(t => t.length > 0);
+
+      filtered = options.filter((opt) => {
+        const normOpt = opt.toLowerCase();
+        // All tokens must be present in the option string
+        return tokens.every(token => normOpt.includes(token));
+      });
+    }
 
     renderResults(filtered, "measureResults", (selected) => {
       measureInput.value = selected;
