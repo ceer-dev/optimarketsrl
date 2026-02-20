@@ -406,6 +406,26 @@ const Controller = {
     this.updateCartUI();
     this.renderStep4Cart();
   },
+  async logVisit(opticaName) {
+    try {
+      const normalized = (opticaName || "DESCONOCIDO").trim().toUpperCase();
+      const now = new Date().toLocaleString();
+
+      const formData = new FormData();
+      formData.append("form-name", "visitas");
+      formData.append("optica", normalized);
+      formData.append("fecha_hora", now);
+
+      await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formData).toString(),
+      });
+    } catch (e) {
+      console.warn("Visit log failed", e);
+    }
+  },
+
   getQtyLabel(item) {
     if (item.categoria === "Lentilla") {
       if (item.qty === 1) return "1/2";
