@@ -9,7 +9,28 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23dc2626'/%3E%3Cpath fill='white' d='M256 144c-98.7 0-189.1 55-237.9 144 48.8 89 139.3 144 237.9 144s189.1-55 237.9-144c-48.8-89-139.3-144-237.9-144zm0 240c-53 0-96-43-96-96s43-96 96-96s96 43 96 96s-43 96-96 96zm0-160c-35.3 0-64 28.7-64 64s28.7 64 64 64s64-28.7 64-64s-28.7-64-64-64z'/%3E%3C/svg%3E"
+    />
+    <style>
+      body {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+    </style>
+    <script>
+      // Auth Check
+      if (localStorage.getItem("registeredClient")) {
+        window.location.href = "index.html";
+      } else {
+        document.documentElement.style.display = "block";
+        document.addEventListener("DOMContentLoaded", () => {
+          document.body.style.opacity = "1";
+        });
+      }
+    </script>
   </head>
   <body>
     <div class="flex-center">
@@ -40,13 +61,6 @@
             </h1>
             <p style="color: var(--text-muted)">Bienvenido</p>
           </div>
-
-          <!-- Netlify Hidden Form for Bot detection/Static parsing -->
-          <form name="registros" netlify netlify-honeypot="bot-field" hidden>
-            <input type="text" name="optica" />
-            <input type="text" name="celular" />
-            <input type="text" name="nit" />
-          </form>
 
           <form id="registrationForm">
             <div class="form-group">
@@ -117,19 +131,8 @@
     </div>
 
     <script>
-      // Check session
-      const client = JSON.parse(localStorage.getItem("registeredClient"));
-      if (
-        client &&
-        client.optica &&
-        client.phone &&
-        client.phone.length === 8
-      ) {
-        window.location.href = "index.html";
-      }
-
       const form = document.getElementById("registrationForm");
-      form.addEventListener("submit", async function (e) {
+      form.addEventListener("submit", function (e) {
         e.preventDefault();
 
         const data = {
@@ -138,26 +141,7 @@
           nit: document.getElementById("nit").value || "Sin NIT",
         };
 
-        // 1. Silent Save to LocalStorage
         localStorage.setItem("registeredClient", JSON.stringify(data));
-
-        // 2. Silent Netlify Submit
-        const formData = new FormData();
-        formData.append("form-name", "registros");
-        formData.append("optica", data.optica);
-        formData.append("celular", data.phone);
-        formData.append("nit", data.nit);
-
-        try {
-          await fetch("/", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData).toString(),
-          });
-        } catch (err) {
-          console.warn("Tracking error (safe to ignore locally)");
-        }
-
         window.location.href = "index.html";
       });
     </script>
