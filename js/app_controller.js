@@ -20,6 +20,7 @@ const Controller = {
       console.log("Controller: Initialization successful.");
       Events.bind();
       this.updateCartUI();
+      this.checkIfNeedsLogVisit();
       View.hideLoading();
     } else {
       console.error("Controller: Initialization failed.");
@@ -406,6 +407,26 @@ const Controller = {
     this.updateCartUI();
     this.renderStep4Cart();
   },
+
+  checkIfNeedsLogVisit() {
+    console.log("Controller: Checking if visit log is needed...");
+    try {
+      const client = JSON.parse(localStorage.getItem("registeredClient"));
+      if (client && client.optica) {
+        // Small Delay to ensure page is completely ready
+        setTimeout(() => {
+          console.log(
+            "Controller: Triggering background visit log for",
+            client.optica,
+          );
+          this.logVisit(client.optica);
+        }, 2000);
+      }
+    } catch (e) {
+      console.error("Controller: Error checking visit log", e);
+    }
+  },
+
   async logVisit(opticaName) {
     try {
       const normalized = (opticaName || "DESCONOCIDO").trim().toUpperCase();
