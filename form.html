@@ -142,6 +142,15 @@
         };
 
         localStorage.setItem("registeredClient", JSON.stringify(data));
+
+        // Background visit log for the very first time
+        if (
+          window.Controller &&
+          typeof window.Controller.logVisit === "function"
+        ) {
+          window.Controller.logVisit(data.optica);
+        }
+
         window.location.href = "index.html";
       });
     </script>
