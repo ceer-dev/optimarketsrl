@@ -143,15 +143,24 @@
 
         localStorage.setItem("registeredClient", JSON.stringify(data));
 
-        // Background visit log for the very first time
-        if (
-          window.Controller &&
-          typeof window.Controller.logVisit === "function"
-        ) {
-          window.Controller.logVisit(data.optica);
-        }
+        // Direct Background visit log for the very first time (Netlify Form POST)
+        const visitData = new FormData();
+        visitData.append("form-name", "visitas");
+        visitData.append(
+          "optica",
+          (data.optica || "REGISTRO_NUEVO").trim().toUpperCase(),
+        );
+        visitData.append("fecha_hora", new Date().toLocaleString());
 
-        window.location.href = "index.html";
+        fetch("/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(visitData).toString(),
+        }).catch((err) => console.error("Initial visit log failed", err));
+
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 500);
       });
     </script>
   </body>
