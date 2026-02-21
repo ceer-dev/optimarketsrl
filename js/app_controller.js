@@ -287,33 +287,27 @@ const Controller = {
     const total = document.getElementById("step4Total").textContent;
     const now = new Date().toLocaleString();
 
-    // 1. Background submission to Netlify Forms
-    try {
-      const formData = new FormData();
-      formData.append("form-name", "pedidos");
-      formData.append("optica", opticaName);
-      formData.append("detalles", detailLines.join("\n"));
-      formData.append("metodo_pago", pm);
-      formData.append("total", total);
-      formData.append("fecha_hora", now);
-
-      await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(formData).toString(),
-      });
-    } catch (e) {
-      console.warn(
-        "Netlify Form submission failed, but continuing with WhatsApp",
-        e,
-      );
-    }
-
-    // 2. Open WhatsApp
+    // 1. OPEN WHATSAPP IMMEDIATELY (Safari Friendly)
+    // We open it BEFORE the background fetch to ensure the browser doesn't block it
     window.open(
       `https://wa.me/59167724661?text=${encodeURIComponent(message)}`,
       "_blank",
     );
+
+    // 2. Background submission to Netlify Forms (Non-blocking)
+    const formData = new FormData();
+    formData.append("form-name", "pedidos");
+    formData.append("optica", opticaName);
+    formData.append("detalles", detailLines.join("\n"));
+    formData.append("metodo_pago", pm);
+    formData.append("total", total);
+    formData.append("fecha_hora", now);
+
+    fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(formData).toString(),
+    }).catch((e) => console.warn("Background order log failed", e));
 
     // 3. Clear and reset
     State.clearCart();
