@@ -131,26 +131,42 @@
     </div>
 
     <script>
-      const form = document.getElementById("registrationForm");
       form.addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const data = {
-          optica: document.getElementById("opticaName").value,
-          phone: document.getElementById("phoneNumber").value,
-          nit: document.getElementById("nit").value || "Sin NIT",
+        const rawOptica = document.getElementById("opticaName").value;
+        const normalizedOptica = rawOptica.trim().toUpperCase();
+        const phone = document.getElementById("phoneNumber").value;
+        const nit = document.getElementById("nit").value || "Sin NIT";
+        const now = new Date().toLocaleString();
+
+        const clientData = {
+          optica: normalizedOptica,
+          phone: phone,
+          nit: nit,
         };
 
-        localStorage.setItem("registeredClient", JSON.stringify(data));
+        localStorage.setItem("registeredClient", JSON.stringify(clientData));
 
-        // Direct Background visit log for the very first time (Netlify Form POST)
+        // 1. Background REGISTRATION log (Netlify Form: registros)
+        const regData = new FormData();
+        regData.append("form-name", "registros");
+        regData.append("optica", normalizedOptica);
+        regData.append("celular", phone);
+        regData.append("nit", nit);
+        regData.append("fecha_hora", now);
+
+        fetch("/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(regData).toString(),
+        }).catch((err) => console.error("Registration log failed", err));
+
+        // 2. Background VISIT log (Netlify Form: visitas)
         const visitData = new FormData();
         visitData.append("form-name", "visitas");
-        visitData.append(
-          "optica",
-          (data.optica || "REGISTRO_NUEVO").trim().toUpperCase(),
-        );
-        visitData.append("fecha_hora", new Date().toLocaleString());
+        visitData.append("optica", normalizedOptica);
+        visitData.append("fecha_hora", now);
 
         fetch("/", {
           method: "POST",
@@ -160,7 +176,7 @@
 
         setTimeout(() => {
           window.location.href = "index.html";
-        }, 500);
+        }, 800);
       });
     </script>
   </body>
