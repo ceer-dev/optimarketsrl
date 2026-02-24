@@ -42,12 +42,19 @@ const Controller = {
     View.renderHelpGuide(cat);
     View.renderSearchAids(cat, (term) => {
       input.value = term;
-      input.focus();
+      // Only focus if not on mobile
+      if (!View.isMobile()) {
+        input.focus();
+      }
       this.handleSearchInput(term);
     });
 
     View.goToStep(2);
-    setTimeout(() => input.focus(), 100);
+
+    // Only focus if not on mobile
+    if (!View.isMobile()) {
+      setTimeout(() => input.focus(), 100);
+    }
   },
 
   handleSearchInput(val) {
@@ -154,6 +161,38 @@ const Controller = {
 
     const labelText = this.getQtyLabel({ ...item, qty: 1 });
     const badgeClass = item.categoria === "Lentilla" ? "badge-lentilla" : "";
+
+    if (parseFloat(item.cf) === 0) {
+      display.innerHTML = `
+        <div class="calc-container">
+            <div class="calc-header-row">
+              <div class="calc-title-group">
+                  <span class="badge ${badgeClass}">${item.categoria}</span>
+                  <h2>${item.nombre}</h2>
+                  <p>${item.medida}</p>
+              </div>
+              <button class="btn glass" onclick="View.goToStep(2)" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                  <i class="fas fa-arrow-left"></i> Volver
+              </button>
+            </div>
+            
+            <div class="glass-card" style="text-align: center; padding: 3rem 1.5rem; border: 1px solid #fee2e2; background: #fffafb;">
+                <div style="font-size: 3rem; color: #ef4444; margin-bottom: 1.5rem;">
+                  <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3 style="color: #1e293b; margin-bottom: 1rem; font-size: 1.25rem;">Sin Stock disponible</h3>
+                <p style="color: #64748b; font-size: 1.05rem; line-height: 1.5; font-weight: 500;">
+                  Actualmente no contamos con este material. <br>
+                  <strong style="color: var(--primary);">Próximamente estará en nuestro stock.</strong>
+                </p>
+                <button class="btn glass" onclick="View.goToStep(2)" style="margin-top: 2rem; width: 100%;">
+                  <i class="fas fa-search"></i> Buscar otro material
+                </button>
+            </div>
+        </div>
+      `;
+      return;
+    }
 
     display.innerHTML = `
       <div class="calc-container">
