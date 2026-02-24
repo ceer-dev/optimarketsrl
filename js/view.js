@@ -1,6 +1,13 @@
 const View = {
   loader: document.getElementById("loadingOverlay"),
 
+  isMobile() {
+    return (
+      window.matchMedia("(max-width: 768px)").matches ||
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    );
+  },
+
   showLoading() {
     if (this.loader) {
       this.loader.style.display = "flex";
@@ -185,6 +192,21 @@ const View = {
     if (card) card.classList.toggle("collapsed");
   },
 
+  applyMeasure(val) {
+    const fm = document.getElementById("finalMeasure");
+    if (!fm) return;
+
+    if (val === "cil") {
+      fm.value = "cil " + fm.value.replace(/^cil\s*/i, "");
+    } else {
+      fm.value = val;
+    }
+
+    if (!this.isMobile()) {
+      fm.focus();
+    }
+  },
+
   renderSecondaryInputs(cat) {
     const container = document.getElementById("dynamicSecondaryInputs");
     if (!container) return;
@@ -197,19 +219,19 @@ const View = {
           <label class="form-label"><i class="fas fa-ruler-horizontal"></i> Medida:</label>
           <input type="text" id="finalMeasure" class="form-input" placeholder="+0.00" autocomplete="off" required>
           <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
-            <button class="search-aid-tag" onclick="const fm = document.getElementById('finalMeasure'); fm.value = 'cil ' + fm.value.replace(/^cil\\s*/i, ''); fm.focus();" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
+            <button class="search-aid-tag" onclick="View.applyMeasure('cil')" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
               <i class="fas fa-pen" style="font-size: 0.75rem; opacity: 0.7;"></i> cil
             </button>
-            <button class="search-aid-tag" onclick="const fm = document.getElementById('finalMeasure'); fm.value = '+1.50'; fm.focus();" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
+            <button class="search-aid-tag" onclick="View.applyMeasure('+1.50')" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
               <i class="fas fa-pen" style="font-size: 0.75rem; opacity: 0.7;"></i> +1.50
             </button>
-            <button class="search-aid-tag" onclick="const fm = document.getElementById('finalMeasure'); fm.value = '-1.50'; fm.focus();" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
+            <button class="search-aid-tag" onclick="View.applyMeasure('-1.50')" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
               <i class="fas fa-pen" style="font-size: 0.75rem; opacity: 0.7;"></i> -1.50
             </button>
-            <button class="search-aid-tag" onclick="const fm = document.getElementById('finalMeasure'); fm.value = '+1.50-1.50'; fm.focus();" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
+            <button class="search-aid-tag" onclick="View.applyMeasure('+1.50-1.50')" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
               <i class="fas fa-pen" style="font-size: 0.75rem; opacity: 0.7;"></i> +1.50-1.50
             </button>
-            <button class="search-aid-tag" onclick="const fm = document.getElementById('finalMeasure'); fm.value = '-1.50-1.50'; fm.focus();" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
+            <button class="search-aid-tag" onclick="View.applyMeasure('-1.50-1.50')" style="padding: 0.4rem 0.8rem; border-radius: 8px; background: white; color: #1e293b; border: 1px solid #e2e8f0;">
               <i class="fas fa-pen" style="font-size: 0.75rem; opacity: 0.7;"></i> -1.50-1.50
             </button>
           </div>
@@ -240,6 +262,9 @@ const View = {
     }
     container.innerHTML = html;
     setTimeout(() => {
+      // Avoid forcing focus on mobile to prevent keyboard obscuring the view
+      if (this.isMobile()) return;
+
       const first = container.querySelector("input");
       if (first) first.focus();
     }, 100);
