@@ -859,11 +859,19 @@ const Controller = {
 
     // Map for specific unit price overrides (Bs. per unit)
     const unitPriceOverrides = {
-      200: 17,
-      "2258t": 100,
-      "2263a": 84,
-      230: 19.5,
-      "2326t": 92,
+      200: 19,
+      "2258t": 110,
+      "2263a": 92,
+      230: 22,
+      "2326t": 101,
+      "2331t": 101,
+      85002: 120,
+      85015: 120,
+      91714: 110,
+      95802: 110,
+      95933: 42,
+      95972: 110,
+      97790: 110,
     };
 
     // Compute base price per unit natively
