@@ -21,6 +21,7 @@ const Controller = {
       Events.bind();
       this.updateCartUI();
       this.checkIfNeedsLogVisit();
+      this.initNovedadesSlideshow();
       View.hideLoading();
     } else {
       console.error("Controller: Initialization failed.");
@@ -32,6 +33,27 @@ const Controller = {
 
   handleCategorySelect(cat) {
     State.currentCategory = cat;
+
+    if (cat === "Accesorios") {
+      const standardSearch = document.getElementById("standardSearchSection");
+      if (standardSearch) standardSearch.classList.add("hidden");
+      const accSection = document.getElementById("accesoriosSection");
+      if (accSection) accSection.classList.remove("hidden");
+      const kmToggle = document.getElementById("keepMaterialToggle");
+      if (kmToggle) kmToggle.parentElement.classList.add("hidden");
+
+      this.loadAndRenderAccesorios();
+      View.goToStep(2);
+      return;
+    }
+
+    const standardSearch = document.getElementById("standardSearchSection");
+    if (standardSearch) standardSearch.classList.remove("hidden");
+    const accSection = document.getElementById("accesoriosSection");
+    if (accSection) accSection.classList.add("hidden");
+    const kmToggle = document.getElementById("keepMaterialToggle");
+    if (kmToggle) kmToggle.parentElement.classList.remove("hidden");
+
     const input = document.getElementById("productInput");
     input.value = "";
 
@@ -159,8 +181,30 @@ const Controller = {
       </div>`
       : "";
 
-    const labelText = this.getQtyLabel({ ...item, qty: 1 });
+    let defaultQty = 1;
+    if (item.categoria === "Accesorios") {
+      let cat = item.parsedCategoria;
+      if (cat === "montura") defaultQty = 3;
+      if (cat === "estuche lente de contacto") defaultQty = 12;
+    }
+
+    const labelText = this.getQtyLabel({ ...item, qty: defaultQty });
     const badgeClass = item.categoria === "Lentilla" ? "badge-lentilla" : "";
+    const initTotal = (parseFloat(item.cf) * defaultQty).toFixed(1);
+
+    let thumbnailHtml = "";
+    if (item.categoria === "Accesorios" && item.imgSrc) {
+      thumbnailHtml = `
+          <div style="display: flex; justify-content: center; margin-bottom: 1.5rem;">
+            <div style="position: relative; cursor: pointer; display: inline-block;" onclick="Controller.openImageModal('${item.imgSrc}')">
+              <img src="${item.imgSrc}" style="width: 160px; height: 160px; object-fit: contain; border-radius: 12px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; padding: 0.3rem 0.5rem; border-radius: 8px; font-size: 0.75rem;">
+                 <i class="fas fa-search-plus"></i> Ampliar
+              </div>
+            </div>
+          </div>
+        `;
+    }
 
     if (parseFloat(item.cf) === 0) {
       display.innerHTML = `
@@ -175,18 +219,18 @@ const Controller = {
                   <i class="fas fa-arrow-left"></i> Volver
               </button>
             </div>
-            
+            ${thumbnailHtml}
             <div class="glass-card" style="text-align: center; padding: 3rem 1.5rem; border: 1px solid #fee2e2; background: #fffafb;">
                 <div style="font-size: 3rem; color: #ef4444; margin-bottom: 1.5rem;">
                   <i class="fas fa-exclamation-circle"></i>
                 </div>
-                <h3 style="color: #1e293b; margin-bottom: 1rem; font-size: 1.25rem;">Sin Stock disponible</h3>
+                <h3 style="color: #1e293b; margin-bottom: 1rem; font-size: 1.25rem;">Sin Stock disponible / Cotizado</h3>
                 <p style="color: #64748b; font-size: 1.05rem; line-height: 1.5; font-weight: 500;">
-                  Actualmente no contamos con este material. <br>
-                  <strong style="color: var(--primary);">Próximamente estará en nuestro stock.</strong>
+                  Por favor, contáctanos o <br>
+                  <strong style="color: var(--primary);">visualiza la imagen y envía tu pedido para cotización directa.</strong>
                 </p>
-                <button class="btn glass" onclick="View.goToStep(2)" style="margin-top: 2rem; width: 100%;">
-                  <i class="fas fa-search"></i> Buscar otro material
+                <button class="btn btn-primary" onclick="Controller.handleAddToCart('continue')" style="margin-top: 2rem; width: 100%;">
+                  <i class="fas fa-check"></i> Agregar y Cotizar
                 </button>
             </div>
         </div>
@@ -206,19 +250,19 @@ const Controller = {
                 <i class="fas fa-arrow-left"></i> Volver
             </button>
           </div>
-
+          ${thumbnailHtml}
           <div class="calc-premium-card">
               <div class="calc-price-section">
                   <div class="calc-price-row">
-                      <span class="calc-label-text">Precio Unitario (${labelText})</span>
+                      <span class="calc-label-text">Precio Unitario</span>
                       <span class="calc-value-text">${item.cf} Bs.</span>
                   </div>
                   ${sfRow}
               </div>
 
               <div class="calc-total-row">
-                  <span class="calc-total-label">Total Cotizado</span>
-                  <div id="liveTotal" class="calc-total-value">${item.cf} Bs.</div>
+                  <span class="calc-total-label">Subtotal Cotizado</span>
+                  <div id="liveTotal" class="calc-total-value">${initTotal} Bs.</div>
                   <span id="liveQtyLabel" class="calc-total-badge">${labelText}</span>
               </div>
 
@@ -226,7 +270,7 @@ const Controller = {
                   <h3>Cantidad</h3>
                   <div class="modern-qty-control">
                       <button class="modern-qty-btn" onclick="Controller.updateQty(-1)"><i class="fas fa-minus"></i></button>
-                      <input type="number" id="qtyInput" class="modern-qty-input" value="1" min="1" readonly>
+                      <input type="number" id="qtyInput" class="modern-qty-input" value="${defaultQty}" min="1" readonly>
                       <button class="modern-qty-btn" onclick="Controller.updateQty(1)"><i class="fas fa-plus"></i></button>
                   </div>
               </div>
@@ -246,8 +290,25 @@ const Controller = {
 
   updateQty(delta) {
     const input = document.getElementById("qtyInput");
-    let val = parseInt(input.value || 1) + delta;
-    if (val < 1) val = 1;
+
+    let step = 1;
+    let min = 1;
+
+    if (State.currentCategory === "Accesorios" && State.currentItem) {
+      let cat = State.currentItem.parsedCategoria || "";
+      if (cat === "montura") {
+        min = 3;
+      } else if (cat === "estuche lente de contacto") {
+        min = 12;
+        step = 12;
+      }
+    }
+
+    let actualDelta = delta > 0 ? step : -step;
+    let val = parseInt(input.value || 1) + actualDelta;
+
+    if (val < min) val = min;
+
     input.value = val;
     this.calculateLiveTotal(val);
   },
@@ -273,7 +334,14 @@ const Controller = {
       return;
     }
 
-    const keep = document.getElementById("keepMaterialToggle").checked;
+    if (State.currentCategory === "Accesorios") {
+      View.goToStep(2);
+      return;
+    }
+
+    const keepToggle = document.getElementById("keepMaterialToggle");
+    const keep = keepToggle ? keepToggle.checked : false;
+
     if (keep) {
       document.getElementById("dynamicSecondaryInputs").innerHTML = "";
       this.handleProductSelected(State.currentItem.nombre);
@@ -286,6 +354,19 @@ const Controller = {
   updateCartUI() {
     const totalItems = State.cart.reduce((acc, i) => acc + i.qty, 0);
     View.updateCartBadge(totalItems);
+
+    // Update floating cart specifically for Novedades view
+    const floatBadge = document.getElementById("floatingCartCount");
+    const floatContainer = document.getElementById("floatingCartContainer");
+    if (floatBadge) floatBadge.textContent = totalItems;
+
+    if (floatContainer) {
+      if (totalItems > 0 && State.currentCategory === "Accesorios") {
+        floatContainer.classList.remove("hidden");
+      } else {
+        floatContainer.classList.add("hidden");
+      }
+    }
   },
 
   handleViewCart() {
@@ -371,20 +452,7 @@ const Controller = {
       const sub = (parseFloat(item.cf) * item.qty).toFixed(1);
       total += parseFloat(sub);
 
-      let qtyLabel = "";
-      if (item.categoria === "Lentilla") {
-        if (item.qty === 1) qtyLabel = "1/2";
-        else if (item.qty === 2) qtyLabel = "1 par";
-        else if (item.qty === 3) qtyLabel = "1 par 1/2";
-        else if (item.qty === 4) qtyLabel = "2 pares";
-        else {
-          const pares = Math.floor(item.qty / 2);
-          const resto = item.qty % 2;
-          qtyLabel = `${pares} par${pares > 1 ? "es" : ""}${resto ? " 1/2" : ""}`;
-        }
-      } else {
-        qtyLabel = `${item.qty} par${item.qty > 1 ? "es" : ""}`;
-      }
+      let qtyLabel = this.getQtyLabel(item);
 
       const div = document.createElement("div");
       div.className = "glass animate-fade-in";
@@ -412,7 +480,7 @@ const Controller = {
           </div>
           
           <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem;">
-            <div style="color: var(--primary); font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px;">${sub} <span style="font-size: 0.8rem; font-weight: 600;">Bs.</span></div>
+            ${item.categoria === "Accesorios" && parseFloat(item.cf) === 0 ? '<div style="color: var(--primary); font-weight: 800; font-size: 1.1rem; letter-spacing: -0.5px;">Ver imagen</div>' : `<div style="color: var(--primary); font-weight: 800; font-size: 1.25rem; letter-spacing: -0.5px;">${sub} <span style="font-size: 0.8rem; font-weight: 600;">Bs.</span></div>`}
             <button class="btn glass" onclick="Controller.handleRemoveFromCart(${index})" style="color: #ef4444; border-color: #fee2e2; padding: 0.5rem; border-radius: 10px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #fff1f2;">
               <i class="fas fa-trash-alt" style="font-size: 0.9rem;"></i>
             </button>
@@ -426,8 +494,30 @@ const Controller = {
 
   updateCartItemQty(index, delta) {
     if (State.cart[index]) {
-      State.cart[index].qty += delta;
-      if (State.cart[index].qty < 1) State.cart[index].qty = 1;
+      let item = State.cart[index];
+
+      let step = 1;
+      let min = 1;
+      if (item.categoria === "Accesorios") {
+        let parsedCategoria = item.nombre.match(/Accesorio:\s*(.*?)\s*-/i);
+        parsedCategoria = parsedCategoria
+          ? parsedCategoria[1].trim().toLowerCase()
+          : "";
+
+        if (parsedCategoria === "montura") {
+          min = 3;
+        } else if (parsedCategoria === "estuchelentedecontacto") {
+          min = 12;
+          step = 12;
+        }
+      }
+
+      // Calculate delta honoring step
+      let actualDelta = delta > 0 ? step : -step;
+      item.qty += actualDelta;
+
+      if (item.qty < min) item.qty = min;
+
       State.saveCart();
       this.updateCartUI();
       this.renderStep4Cart();
@@ -481,6 +571,13 @@ const Controller = {
   },
 
   getQtyLabel(item) {
+    if (item.categoria === "Accesorios") {
+      if (item.parsedCategoria === "estuche lente de contacto") {
+        const docenas = item.qty / 12;
+        return `${docenas} DOCENA${docenas > 1 ? "S" : ""}`;
+      }
+      return `${item.qty} unid${item.qty > 1 ? "s" : ""}`;
+    }
     if (item.categoria === "Lentilla") {
       if (item.qty === 1) return "1/2";
       if (item.qty === 2) return "1 par";
@@ -491,6 +588,328 @@ const Controller = {
       return `${pares} par${pares > 1 ? "es" : ""}${resto ? " 1/2" : ""}`;
     }
     return `${item.qty} par${item.qty > 1 ? "es" : ""}`;
+  },
+
+  async loadAndRenderAccesorios() {
+    State.accessoriesPage = 1;
+    View.showLoading();
+    try {
+      // Usar variable global generada por actualizar_accesorios.bat en lugar de fetch
+      // para evitar bloqueos CORS por abrir archivo local (file:///)
+      const images = window.accesoriosData || [];
+
+      const grid = document.getElementById("accesoriosGrid");
+      const filterContainer = document.getElementById("accesoriosFilters");
+
+      grid.innerHTML = "";
+      if (filterContainer) filterContainer.innerHTML = "";
+
+      if (images.length === 0) {
+        grid.innerHTML = `<p style="text-align:center; grid-column: 1/-1;">No hay accesorios disponibles o no has ejecutado actualizar_accesorios.bat.</p>`;
+      } else {
+        // Extract unique categories
+        const categorias = [
+          ...new Set(images.map((img) => img.categoria || "Otros")),
+        ].sort();
+
+        // Render Filters
+        if (filterContainer && categorias.length > 0) {
+          const allBtn = document.createElement("button");
+          allBtn.className = "btn btn-primary category-filter-btn active";
+          allBtn.style.padding = "0.5rem 1rem";
+          allBtn.style.borderRadius = "20px";
+          allBtn.style.fontSize = "0.85rem";
+          allBtn.textContent = "Todos";
+          allBtn.onclick = () => Controller.filterAccesorios("Todos");
+          filterContainer.appendChild(allBtn);
+
+          categorias.forEach((cat) => {
+            const btn = document.createElement("button");
+            btn.className = "btn glass category-filter-btn";
+            btn.style.padding = "0.5rem 1rem";
+            btn.style.borderRadius = "20px";
+            btn.style.fontSize = "0.85rem";
+            btn.textContent =
+              cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+            btn.onclick = () => Controller.filterAccesorios(cat);
+            filterContainer.appendChild(btn);
+          });
+        }
+
+        // Render initial view
+        this.renderAccesoriosCards(images);
+      }
+    } catch (e) {
+      console.error(e);
+      document.getElementById("accesoriosGrid").innerHTML =
+        `<p style="text-align:center; grid-column: 1/-1; color: red;">Error al cargar accesorios.</p>`;
+    }
+    View.hideLoading();
+  },
+
+  filterAccesorios(categoriaStr) {
+    State.accessoriesPage = 1; // Reset to page 1 on filter change
+    document.querySelectorAll(".category-filter-btn").forEach((btn) => {
+      btn.className = "btn glass category-filter-btn";
+      if (
+        btn.textContent.toLowerCase() === categoriaStr.toLowerCase() ||
+        (categoriaStr === "Todos" && btn.textContent === "Todos")
+      ) {
+        btn.className = "btn btn-primary category-filter-btn active";
+      }
+    });
+
+    const images = window.accesoriosData || [];
+    let filtered = images;
+    if (categoriaStr !== "Todos") {
+      filtered = images.filter(
+        (img) =>
+          (img.categoria || "Otros").toLowerCase() ===
+          categoriaStr.toLowerCase(),
+      );
+    }
+    this.renderAccesoriosCards(filtered);
+  },
+
+  renderAccesoriosCards(images) {
+    const itemsPerPage = 5;
+    const currentPage = State.accessoriesPage || 1;
+    const totalPages = Math.ceil(images.length / itemsPerPage);
+    const startIdx = (currentPage - 1) * itemsPerPage;
+    const pagedImages = images.slice(startIdx, startIdx + itemsPerPage);
+
+    const grid = document.getElementById("accesoriosGrid");
+    grid.innerHTML = "";
+
+    if (pagedImages.length === 0) {
+      grid.innerHTML = `<p style="text-align:center; grid-column: 1/-1;">No hay resultados para esta categoría.</p>`;
+      return;
+    }
+
+    pagedImages.forEach((itemInfo) => {
+      const card = document.createElement("div");
+      card.className = "glass-card animate-fade-in";
+      card.style.padding = "1rem";
+      card.style.display = "flex";
+      card.style.flexDirection = "column";
+      card.style.gap = "0.75rem";
+
+      const imgSrc = `images/productos/${encodeURIComponent(itemInfo.fileName)}`;
+
+      let parsedCategoria = itemInfo.categoria || "Accesorio";
+      let parsedCodigo = itemInfo.codigo || "";
+
+      let isDozenCat =
+        parsedCategoria.toLowerCase() === "montura" ||
+        parsedCategoria.toLowerCase() === "estuche lente de contacto";
+
+      let unitLabel = "Unidad";
+      if (parsedCategoria.toLowerCase() === "estuche lente de contacto") {
+        unitLabel = "DOCENA";
+      } else if (parsedCategoria.toLowerCase() === "montura") {
+        unitLabel = "Min 3 u.";
+      }
+
+      let labelHTML = itemInfo.fileName.replace(/\.[^/.]+$/, "");
+      if (itemInfo.isValid) {
+        const catFormatted =
+          parsedCategoria.charAt(0).toUpperCase() +
+          parsedCategoria.slice(1).toLowerCase();
+
+        let priceHTML = "";
+        if (itemInfo.precioBs) {
+          let displayPrice = parseFloat(itemInfo.precioBs);
+          if (isDozenCat) {
+            priceHTML = `<span style="font-weight: 800; color: var(--primary); font-size: 1.05rem;">${displayPrice} Bs. <span style="font-size: 0.70rem; font-weight: normal; color: var(--text-muted)">(${unitLabel})</span></span>`;
+          } else {
+            priceHTML = `<span style="font-weight: 800; color: var(--primary); font-size: 1.05rem;">${displayPrice} Bs.</span>`;
+          }
+        } else {
+          priceHTML = `<span style="font-weight: 800; color: var(--primary); font-size: 1.05rem;">Ver imagen</span>`;
+        }
+
+        labelHTML = `
+          <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%; text-align: left; font-size: 0.9rem; color: var(--text-main);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-glass); padding-bottom: 0.25rem;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Categoría</span>
+              <span style="font-weight: 600; text-transform: capitalize;">${catFormatted}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border-glass); padding-bottom: 0.25rem;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Código</span>
+              <span style="font-weight: 600;">${parsedCodigo}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.25rem;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Precio</span>
+              ${priceHTML}
+            </div>
+          </div>
+        `;
+      } else {
+        labelHTML = `<div style="font-weight: 600; text-align: center; font-size: 0.9rem; word-break: break-all;">${labelHTML}</div>`;
+      }
+
+      card.innerHTML = `
+        <div style="width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 8px; cursor:pointer; background: transparent;" onclick="Controller.openImageModal('${imgSrc}')">
+          <img src="${imgSrc}" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
+        ${labelHTML}
+        
+        <div style="display:flex; gap: 0.5rem; margin-top: auto; padding-top: 0.5rem;">
+          <button class="btn glass" style="flex: 1; font-size: 0.85rem; padding: 0.6rem 0.2rem;" onclick="Controller.openImageModal('${imgSrc}')">
+            <i class="fas fa-search-plus"></i> Ampliar
+          </button>
+          <button class="btn btn-primary" style="flex: 1; font-size: 0.85rem; padding: 0.6rem 0.2rem;" onclick='Controller.goToAccesorioCalculation(${JSON.stringify(itemInfo)})'>
+            <i class="fas fa-shopping-cart"></i> Comprar
+          </button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Pagination Controls
+    if (totalPages > 1) {
+      const pagination = document.createElement("div");
+      pagination.style.gridColumn = "1/-1";
+      pagination.style.display = "flex";
+      pagination.style.justifyContent = "center";
+      pagination.style.alignItems = "center";
+      pagination.style.gap = "0.75rem";
+      pagination.style.marginTop = "1.5rem";
+      pagination.style.padding = "1rem";
+      pagination.className = "pagination-container";
+
+      const btnStyle =
+        "padding: 0.6rem 1rem; border-radius: 12px; font-size: 0.9rem; min-width: 100px;";
+
+      const prevBtn = document.createElement("button");
+      prevBtn.className = "btn glass";
+      prevBtn.style.cssText = btnStyle;
+      prevBtn.innerHTML = `<i class="fas fa-chevron-left"></i> Anterior`;
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => {
+        State.accessoriesPage = currentPage - 1;
+        this.renderAccesoriosCards(images);
+        document
+          .getElementById("accesoriosGrid")
+          .scrollIntoView({ behavior: "smooth" });
+      };
+
+      const pageInfo = document.createElement("span");
+      pageInfo.style.fontWeight = "600";
+      pageInfo.style.fontSize = "0.9rem";
+      pageInfo.style.color = "var(--text-muted)";
+      pageInfo.textContent = `Pág. ${currentPage} de ${totalPages}`;
+
+      const nextBtn = document.createElement("button");
+      nextBtn.className = "btn glass";
+      nextBtn.style.cssText = btnStyle;
+      nextBtn.innerHTML = `Siguiente <i class="fas fa-chevron-right"></i>`;
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => {
+        State.accessoriesPage = currentPage + 1;
+        this.renderAccesoriosCards(images);
+        document
+          .getElementById("accesoriosGrid")
+          .scrollIntoView({ behavior: "smooth" });
+      };
+
+      pagination.appendChild(prevBtn);
+      pagination.appendChild(pageInfo);
+      pagination.appendChild(nextBtn);
+      grid.appendChild(pagination);
+    }
+  },
+
+  openImageModal(src) {
+    document.getElementById("modalImage").src = src;
+    document.getElementById("imageModal").classList.remove("hidden");
+  },
+
+  initNovedadesSlideshow() {
+    const container = document.getElementById("novedadesSlideshow");
+    if (!container) return;
+
+    let images = window.accesoriosData || [];
+    if (images.length === 0) return;
+
+    // Get valid image urls
+    const urls = images
+      .filter((i) => i.isValid)
+      .map((i) => `images/productos/${encodeURIComponent(i.fileName)}`);
+    if (urls.length === 0) return;
+
+    let currentIndex = 0;
+
+    // Set first image
+    container.style.backgroundImage = `url('${urls[currentIndex]}')`;
+
+    // Change image every 3 seconds
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % urls.length;
+      container.style.backgroundImage = `url('${urls[currentIndex]}')`;
+    }, 3000);
+  },
+
+  goToAccesorioCalculation(itemInfo) {
+    let parsedCategoria = itemInfo.categoria || "Accesorio";
+    let parsedCodigo = itemInfo.codigo || "";
+    let isDozenCat =
+      parsedCategoria.toLowerCase() === "montura" ||
+      parsedCategoria.toLowerCase() === "estuche lente de contacto";
+
+    // Map for specific unit price overrides (Bs. per unit)
+    const unitPriceOverrides = {
+      200: 17,
+      "2258t": 100,
+      "2263a": 84,
+      230: 19.5,
+      "2326t": 92,
+    };
+
+    // Compute base price per unit natively
+    let basePrice = itemInfo.precioBs ? parseFloat(itemInfo.precioBs) : 0;
+    let unitPrice = 0;
+
+    if (unitPriceOverrides[parsedCodigo]) {
+      unitPrice = unitPriceOverrides[parsedCodigo];
+    } else if (isDozenCat && basePrice > 0) {
+      let rawUnit = basePrice / 12;
+      let fraction = rawUnit - Math.floor(rawUnit);
+      if (Math.abs(fraction - 0.5) < 0.01) {
+        unitPrice = Math.floor(rawUnit) + 0.5;
+      } else {
+        unitPrice = Math.round(rawUnit);
+      }
+    } else {
+      unitPrice = basePrice;
+    }
+
+    let fullName = itemInfo.fileName.replace(/\.[^/.]+$/, "");
+    if (itemInfo.isValid) {
+      let rawCat = parsedCategoria;
+      parsedCategoria =
+        rawCat.charAt(0).toUpperCase() + rawCat.slice(1).toLowerCase();
+      fullName = `${parsedCategoria} (Cód: ${parsedCodigo})`;
+    }
+
+    State.currentItem = {
+      id:
+        "acc_" +
+        btoa(unescape(encodeURIComponent(itemInfo.fileName))).substring(0, 20),
+      categoria: "Accesorios",
+      parsedCategoria: parsedCategoria.toLowerCase(),
+      nombre: fullName,
+      medida: itemInfo.isValid
+        ? "Código: " + parsedCodigo
+        : "Precio según imagen",
+      espejo: false, // Compatibility
+      cf: unitPrice,
+      imgSrc: `images/productos/${encodeURIComponent(itemInfo.fileName)}`,
+    };
+
+    View.renderSecondaryInputs(State.currentCategory);
+    this.renderCalculationView(State.currentItem);
+    View.goToStep(3);
   },
 };
 
