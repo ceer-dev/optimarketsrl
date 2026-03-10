@@ -33,6 +33,18 @@
     </script>
   </head>
   <body>
+    <!-- Hidden forms for Netlify logging -->
+    <form name="registros" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="celular" />
+      <input type="text" name="nit" />
+      <input type="text" name="fecha_hora" />
+    </form>
+    <form name="visitas" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="fecha_hora" />
+    </form>
+
     <div class="flex-center">
       <div class="container" style="max-width: 500px">
         <div class="glass-card animate-fade-in">
