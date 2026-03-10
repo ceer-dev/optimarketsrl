@@ -64,6 +64,12 @@
     </script>
   </head>
   <body>
+    <!-- Hidden form for Netlify visit logging -->
+    <form name="visitas" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="fecha_hora" />
+    </form>
+
     <div id="loadingOverlay">
       <div class="spinner"></div>
       <p style="margin-top: 1rem; font-weight: 500">Cargando ...</p>
@@ -201,6 +207,69 @@
                 ></i>
                 <span>BLOCK</span>
               </button>
+              <button
+                class="btn glass category-btn"
+                data-cat="Accesorios"
+                style="
+                  height: 120px;
+                  flex-direction: column;
+                  overflow: hidden;
+                  position: relative;
+                  padding: 0;
+                  border: 2px solid var(--primary);
+                "
+              >
+                <!-- Slideshow -->
+                <div
+                  id="novedadesSlideshow"
+                  style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 0;
+                    opacity: 0.45;
+                    background-size: cover;
+                    background-position: center;
+                    transition: background-image 1s ease-in-out;
+                  "
+                ></div>
+                <!-- Content overlay -->
+                <div
+                  style="
+                    position: relative;
+                    z-index: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.7);
+                  "
+                >
+                  <i
+                    class="fas fa-fire"
+                    style="
+                      font-size: 1.5rem;
+                      margin-bottom: 0.5rem;
+                      color: var(--primary);
+                      animation: pulse 2s infinite;
+                    "
+                  ></i>
+                  <span
+                    style="
+                      font-weight: 900;
+                      color: var(--primary);
+                      font-size: 0.85rem;
+                      text-align: center;
+                      line-height: 1.2;
+                    "
+                    >NUEVAS<br />NOVEDADES</span
+                  >
+                </div>
+              </button>
             </div>
           </div>
         </section>
@@ -249,49 +318,133 @@
               </label>
             </div>
 
-            <div
-              id="searchAidSection"
-              class="hidden"
-              style="margin-bottom: 1.5rem"
-            >
+            <div id="standardSearchSection">
               <div
-                id="searchAids"
-                class="search-aid-container Material-shortcuts"
-                style="justify-content: center; margin-top: 0.5rem"
-              ></div>
-            </div>
-
-            <!-- Material Predictive Search -->
-            <div class="form-group">
-              <label class="form-label"
-                ><i class="fas fa-search" style="color: var(--primary)"></i>
-                Busca el Material:</label
+                id="searchAidSection"
+                class="hidden"
+                style="margin-bottom: 1.5rem"
               >
-              <div class="search-box">
-                <input
-                  type="text"
-                  id="productInput"
-                  class="form-input"
-                  placeholder="Escribe el material (ej: Blanco)..."
-                  autocomplete="off"
-                  required
-                />
+                <div
+                  id="searchAids"
+                  class="search-aid-container Material-shortcuts"
+                  style="justify-content: center; margin-top: 0.5rem"
+                ></div>
               </div>
-              <div id="productResults" class="results-list"></div>
-            </div>
 
-            <!-- Dynamic Secondary Inputs Placeholder -->
-            <div id="dynamicSecondaryInputs"></div>
+              <!-- Material Predictive Search -->
+              <div class="form-group">
+                <label class="form-label"
+                  ><i class="fas fa-search" style="color: var(--primary)"></i>
+                  Busca el Material:</label
+                >
+                <div class="search-box">
+                  <input
+                    type="text"
+                    id="productInput"
+                    class="form-input"
+                    placeholder="Escribe el material (ej: Blanco)..."
+                    autocomplete="off"
+                    required
+                  />
+                </div>
+                <div id="productResults" class="results-list"></div>
+              </div>
 
-            <!-- Unified Final Search Button -->
-            <div id="finalSearchAction" class="hidden" style="margin-top: 2rem">
-              <button
-                id="mainSearchBtn"
-                class="btn btn-primary w-100"
-                style="font-size: 1.1rem; padding: 1rem"
+              <!-- Dynamic Secondary Inputs Placeholder -->
+              <div id="dynamicSecondaryInputs"></div>
+
+              <!-- Unified Final Search Button -->
+              <div
+                id="finalSearchAction"
+                class="hidden"
+                style="margin-top: 2rem"
               >
-                <i class="fas fa-search"></i> Buscar
-              </button>
+                <button
+                  id="mainSearchBtn"
+                  class="btn btn-primary w-100"
+                  style="font-size: 1.1rem; padding: 1rem"
+                >
+                  <i class="fas fa-search"></i> Buscar
+                </button>
+              </div>
+            </div>
+            <!-- End standardSearchSection -->
+
+            <!-- Accesorios Section -->
+            <div
+              id="accesoriosSection"
+              class="hidden"
+              style="padding-bottom: 80px"
+            >
+              <div style="text-align: center; margin-bottom: 1.5rem">
+                <h2 style="font-size: 1.5rem; color: var(--text-main)">
+                  Nuevas Novedades y Accesorios
+                </h2>
+                <p style="color: var(--text-muted)">
+                  Añade estos productos a tu pedido actual
+                </p>
+              </div>
+
+              <div
+                id="accesoriosFilters"
+                style="
+                  display: flex;
+                  gap: 0.5rem;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                  margin-bottom: 1.5rem;
+                "
+              >
+                <!-- Filters will be generated dynamically -->
+              </div>
+
+              <div
+                id="accesoriosGrid"
+                style="
+                  display: grid;
+                  gap: 1rem;
+                  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                "
+              >
+                <!-- Cards will be injected here -->
+              </div>
+
+              <!-- Sticky Floating Cart Button for Accessories View -->
+              <div
+                id="floatingCartContainer"
+                class="hidden"
+                style="
+                  position: fixed;
+                  bottom: 20px;
+                  left: 0;
+                  right: 0;
+                  display: flex;
+                  justify-content: center;
+                  z-index: 100;
+                  pointer-events: none;
+                "
+              >
+                <button
+                  class="btn btn-primary animate-fade-in"
+                  style="
+                    pointer-events: auto;
+                    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.5);
+                    border-radius: 30px;
+                    padding: 1rem 2.5rem;
+                    font-size: 1.15rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    font-weight: 700;
+                  "
+                  onclick="Controller.handleViewCart()"
+                >
+                  <i class="fas fa-shopping-cart"></i> Ver Mi Pedido (<span
+                    id="floatingCartCount"
+                    >0</span
+                  >)
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -430,19 +583,79 @@
       <input type="text" name="optica" />
       <input type="text" name="fecha_hora" />
     </form>
-  <form name="registros" data-netlify="true" hidden>
+    <form name="registros" data-netlify="true" hidden>
       <input type="text" name="optica" />
       <input type="text" name="celular" />
       <input type="text" name="nit" />
       <input type="text" name="fecha_hora" />
     </form>
-    
-    <script src="js/data.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/view.js"></script>
-    <script src="js/events.js"></script>
-    <script src="js/app_controller.js"></script>
-    <script src="app.js"></script>
+
+    <!-- Image Modal -->
+    <div
+      id="imageModal"
+      class="hidden"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 1000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+      "
+    >
+      <div
+        style="
+          position: relative;
+          max-width: 100%;
+          max-height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <button
+          onclick="
+            document.getElementById('imageModal').classList.add('hidden')
+          "
+          style="
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            z-index: 1001;
+          "
+        >
+          &times;
+        </button>
+        <img
+          id="modalImage"
+          src=""
+          style="
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          "
+        />
+      </div>
+    </div>
+
+    <script src="js/data.js?v=2"></script>
+    <script src="js/accesorios.js?v=2"></script>
+    <script src="js/state.js?v=2"></script>
+    <script src="js/view.js?v=2"></script>
+    <script src="js/events.js?v=2"></script>
+    <script src="js/app_controller.js?v=2"></script>
+    <script src="app.js?v=2"></script>
     <script>
       // Diagnostic check
       setTimeout(() => {
@@ -461,4 +674,3 @@
     </script>
   </body>
 </html>
-
