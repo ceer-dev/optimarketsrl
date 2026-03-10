@@ -14,13 +14,6 @@ window.accesoriosData = [
     categoria: "estuchelentedecontacto",
   },
   {
-    codigo: "3",
-    fileName: "estuchelentedecontacto_3_20bs.jpeg",
-    isValid: true,
-    precioBs: "20",
-    categoria: "estuchelentedecontacto",
-  },
-  {
     codigo: "4",
     fileName: "estuchelentedecontacto_4_30bs.jpeg",
     isValid: true,
@@ -160,13 +153,7 @@ window.accesoriosData = [
     precioBs: "85",
     categoria: "recuadrooftamologico",
   },
-  {
-    codigo: "3",
-    fileName: "recuadrooftamologico_3_130bs.jpeg",
-    isValid: true,
-    precioBs: "130",
-    categoria: "recuadrooftamologico",
-  },
+
   {
     codigo: "4",
     fileName: "recuadrooftamologico_4_140bs.jpeg",
@@ -182,3 +169,4 @@ window.accesoriosData = [
     categoria: "repuestosvarillas",
   },
 ];
+
