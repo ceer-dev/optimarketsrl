@@ -872,6 +872,11 @@ const Controller = {
       95933: 42,
       95972: 110,
       97790: 110,
+      "2C230": 21.5,
+      "3C230": 21.5,
+      "4C230": 21.5,
+      "Dest80": 88,
+      "Al390": 36,
     };
 
     // Compute base price per unit natively
