@@ -14,6 +14,13 @@ window.accesoriosData = [
     categoria: "estuche lente de contacto",
   },
   {
+    codigo: "3",
+    fileName: "estuchelentedecontacto_3_20bs.jpeg",
+    isValid: true,
+    precioBs: "20",
+    categoria: "estuche lente de contacto",
+  },
+  {
     codigo: "4",
     fileName: "estuchelentedecontacto_4_30bs.jpeg",
     isValid: true,
@@ -47,6 +54,13 @@ window.accesoriosData = [
     isValid: true,
     precioBs: "70",
     categoria: "estuche lente de contacto",
+  },
+  {
+    codigo: "Dest80",
+    fileName: "herramientas_Dest80_88bs.jpeg",
+    isValid: true,
+    precioBs: "88",
+    categoria: "herramientas",
   },
   {
     codigo: "200",
@@ -88,6 +102,34 @@ window.accesoriosData = [
     fileName: "montura_2331t_1210bs.jpeg",
     isValid: true,
     precioBs: "1210",
+    categoria: "montura",
+  },
+  {
+    codigo: "240",
+    fileName: "montura_240_240bs.jpeg",
+    isValid: true,
+    precioBs: "240",
+    categoria: "montura",
+  },
+  {
+    codigo: "2C230",
+    fileName: "montura_2C230_254bs.jpeg",
+    isValid: true,
+    precioBs: "254",
+    categoria: "montura",
+  },
+  {
+    codigo: "3C230",
+    fileName: "montura_3C230_254bs.jpeg",
+    isValid: true,
+    precioBs: "254",
+    categoria: "montura",
+  },
+  {
+    codigo: "4C230",
+    fileName: "montura_4C230_254bs.jpeg",
+    isValid: true,
+    precioBs: "254",
     categoria: "montura",
   },
   {
@@ -140,26 +182,39 @@ window.accesoriosData = [
     categoria: "montura",
   },
   {
+    codigo: "Al390",
+    fileName: "montura_Al390_429bs.jpeg",
+    isValid: true,
+    precioBs: "429",
+    categoria: "montura",
+  },
+  {
     codigo: "1",
     fileName: "recuadrooftamologico_1_45bs.jpeg",
     isValid: true,
     precioBs: "45",
-    categoria: "cuadro oftalmologico",
+    categoria: "Cuadro oftalmologico",
   },
   {
     codigo: "2",
     fileName: "recuadrooftamologico_2_85bs.jpeg",
     isValid: true,
     precioBs: "85",
-    categoria: "cuadro oftalmologico",
+    categoria: "Cuadro oftalmologico",
   },
-
+  {
+    codigo: "3",
+    fileName: "recuadrooftamologico_3_130bs.jpeg",
+    isValid: true,
+    precioBs: "130",
+    categoria: "Cuadro oftalmologico",
+  },
   {
     codigo: "4",
     fileName: "recuadrooftamologico_4_140bs.jpeg",
     isValid: true,
     precioBs: "140",
-    categoria: "cuadro oftalmologico",
+    categoria: "Cuadro oftalmologico",
   },
   {
     codigo: "1",
@@ -169,5 +224,3 @@ window.accesoriosData = [
     categoria: "repuestos de varillas",
   },
 ];
-
-
