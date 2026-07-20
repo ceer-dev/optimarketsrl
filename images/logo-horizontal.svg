@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="420" height="100" role="img" aria-label="OPTIMARKET S.R.L. Logo">
+  <title>OPTIMARKET S.R.L.</title>
+  <defs>
+    <!-- Chrome outer ring gradient -->
+    <linearGradient id="chromeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0c8d0"/>
+      <stop offset="30%" stop-color="#8a9bae"/>
+      <stop offset="60%" stop-color="#d8dfe6"/>
+      <stop offset="100%" stop-color="#6b7a8a"/>
+    </linearGradient>
+    <!-- Red iris gradient -->
+    <radialGradient id="irisGrad" cx="45%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#ff4444"/>
+      <stop offset="35%" stop-color="#cc0000"/>
+      <stop offset="75%" stop-color="#880000"/>
+      <stop offset="100%" stop-color="#440000"/>
+    </radialGradient>
+    <!-- Pupil gradient -->
+    <radialGradient id="pupilGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a0000"/>
+      <stop offset="60%" stop-color="#0a0000"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <!-- Eye white gradient -->
+    <radialGradient id="eyeWhite" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#f0f0f0"/>
+      <stop offset="100%" stop-color="#b0b8c0"/>
+    </radialGradient>
+    <!-- Iris glow ring -->
+    <radialGradient id="irisRing" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stop-color="transparent"/>
+      <stop offset="80%" stop-color="#cc000033"/>
+      <stop offset="100%" stop-color="#cc000066"/>
+    </radialGradient>
+    <!-- Glint gradient -->
+    <radialGradient id="glintGrad" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#ffffff99"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <!-- Red metallic eyelid gradient -->
+    <linearGradient id="lidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff3333"/>
+      <stop offset="40%" stop-color="#cc0000"/>
+      <stop offset="100%" stop-color="#660000"/>
+    </linearGradient>
+    <!-- Text silver gradient -->
+    <linearGradient id="textSilver" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d0d8e0"/>
+      <stop offset="30%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#c0c8d0"/>
+      <stop offset="100%" stop-color="#8a9bae"/>
+    </linearGradient>
+    <!-- Clip for eye shape -->
+    <clipPath id="eyeClip">
+      <path d="M6,50 C20,22 40,10 55,10 C70,10 90,22 104,50 C90,78 70,90 55,90 C40,90 20,78 6,50 Z"/>
+    </clipPath>
+    <!-- Clip for iris -->
+    <clipPath id="irisClip">
+      <circle cx="55" cy="50" r="26"/>
+    </clipPath>
+  </defs>
+
+  <!-- ═══ EYE EMBLEM (0–110, 0–100) ═══ -->
+
+  <!-- Outer chrome eyelid ring (slightly larger, for 3D rim effect) -->
+  <path d="M2,50 C16,18 38,6 55,6 C72,6 94,18 108,50 C94,82 72,94 55,94 C38,94 16,82 2,50 Z"
+        fill="url(#chromeRing)" opacity="0.6"/>
+
+  <!-- Red metallic outer eyelid (top and bottom arcs) -->
+  <!-- Top lid -->
+  <path d="M8,50 C20,24 40,12 55,12 C70,12 90,24 102,50" 
+        fill="none" stroke="url(#lidGrad)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Bottom lid -->
+  <path d="M8,50 C20,76 40,88 55,88 C70,88 90,76 102,50" 
+        fill="none" stroke="url(#lidGrad)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Eye white (sclera) -->
+  <path d="M8,50 C20,24 40,12 55,12 C70,12 90,24 102,50 C90,76 70,88 55,88 C40,88 20,76 8,50 Z"
+        fill="url(#eyeWhite)"/>
+
+  <!-- Iris (red, circular) -->
+  <circle cx="55" cy="50" r="26" fill="url(#irisGrad)"/>
+
+  <!-- Iris detail rings (optical / targeting) -->
+  <circle cx="55" cy="50" r="23" fill="none" stroke="#ff333322" stroke-width="1"/>
+  <circle cx="55" cy="50" r="19" fill="none" stroke="#cc000044" stroke-width="0.8"/>
+  <circle cx="55" cy="50" r="15" fill="none" stroke="#ff444422" stroke-width="0.7"/>
+
+  <!-- Crosshair lines on iris -->
+  <line x1="55" y1="28" x2="55" y2="72" stroke="#cc000033" stroke-width="0.8"/>
+  <line x1="32" y1="50" x2="78" y2="50" stroke="#cc000033" stroke-width="0.8"/>
+
+  <!-- Orange targeting ring accent -->
+  <circle cx="55" cy="50" r="12" fill="none" stroke="#cc440011" stroke-width="1.5"/>
+
+  <!-- Pupil -->
+  <circle cx="55" cy="50" r="11" fill="url(#pupilGrad)"/>
+
+  <!-- Pupil inner detail -->
+  <circle cx="55" cy="50" r="7" fill="#0d0000" opacity="0.9"/>
+
+  <!-- Small red pupil dot -->
+  <circle cx="55" cy="50" r="3" fill="#cc2200" opacity="0.8"/>
+
+  <!-- Main specular glint (top-left of iris) -->
+  <ellipse cx="47" cy="40" rx="6" ry="5" fill="url(#glintGrad)" opacity="0.95"/>
+
+  <!-- Small secondary glint -->
+  <ellipse cx="62" cy="44" rx="2" ry="1.5" fill="white" opacity="0.5"/>
+
+  <!-- Chrome eyelid cap — left tip -->
+  <path d="M8,50 C10,46 12,44 8,50 Z" fill="url(#chromeRing)"/>
+  <!-- Chrome eyelid cap — right tip -->
+  <path d="M102,50 C100,46 98,44 102,50 Z" fill="url(#chromeRing)"/>
+
+  <!-- Red chrome wing accents (like the original's sweep lines) -->
+  <path d="M4,50 C8,40 14,34 20,30" fill="none" stroke="#cc0000" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M106,50 C102,40 96,34 90,30" fill="none" stroke="#cc0000" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Bottom wing accents -->
+  <path d="M4,50 C8,60 14,66 20,70" fill="none" stroke="#880000" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M106,50 C102,60 96,66 90,70" fill="none" stroke="#880000" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- ═══ TEXT (from x=118) ═══ -->
+
+  <!-- "OPTIMARKET" silver metallic -->
+  <text x="120" y="54"
+        font-family="'Outfit', 'Arial Black', Arial, sans-serif"
+        font-size="34"
+        font-weight="900"
+        letter-spacing="-0.5"
+        fill="url(#textSilver)">OPTIMARKET<tspan font-size="28" font-weight="900" font-style="italic" fill="#dc2626"> S.R.L</tspan></text>
+
+
+
+  <!-- Tagline -->
+  <text x="120" y="72"
+        font-family="'Outfit', Arial, sans-serif"
+        font-size="10"
+        font-weight="600"
+        letter-spacing="2.5"
+        fill="#ffffff">DISTRIBUIDORA DE ÓPTICAS</text>
+
+  <!-- Separator line under text -->
+  <!-- <line x1="120" y1="78" x2="415" y2="78" stroke="#cc0000" stroke-width="1.5" opacity="0.35"/> -->
+</svg>

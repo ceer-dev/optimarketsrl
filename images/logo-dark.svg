@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="420" height="100" role="img" aria-label="OPTIMARKET S.R.L. — Versión Oscura">
+  <title>OPTIMARKET S.R.L. — Dark Mode</title>
+  <defs>
+    <linearGradient id="d-chrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#aab8c6"/>
+      <stop offset="35%" stop-color="#d0dae2"/>
+      <stop offset="65%" stop-color="#8898a8"/>
+      <stop offset="100%" stop-color="#556070"/>
+    </linearGradient>
+    <radialGradient id="d-iris" cx="42%" cy="38%" r="58%">
+      <stop offset="0%" stop-color="#ff6666"/>
+      <stop offset="30%" stop-color="#ee1111"/>
+      <stop offset="70%" stop-color="#990000"/>
+      <stop offset="100%" stop-color="#440000"/>
+    </radialGradient>
+    <radialGradient id="d-pupil" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#200000"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <radialGradient id="d-white" cx="50%" cy="43%" r="60%">
+      <stop offset="0%" stop-color="#d8e0e8"/>
+      <stop offset="100%" stop-color="#8898a8"/>
+    </radialGradient>
+    <radialGradient id="d-glint" cx="32%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#ffffffcc"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <linearGradient id="d-lid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff5555"/>
+      <stop offset="45%" stop-color="#dd1111"/>
+      <stop offset="100%" stop-color="#770000"/>
+    </linearGradient>
+    <!-- Text white/silver gradient for dark bg -->
+    <linearGradient id="d-text" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8eff6"/>
+      <stop offset="35%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#d0dae4"/>
+      <stop offset="100%" stop-color="#a0b0c0"/>
+    </linearGradient>
+    <!-- Glow filter for dark mode -->
+    <filter id="d-glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="d-redglow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1 0 0 0 0.8
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0.5 0" result="colored"/>
+      <feMerge>
+        <feMergeNode in="colored"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Red outer glow (dark mode only) -->
+  <path d="M2,50 C16,18 38,6 55,6 C72,6 94,18 108,50 C94,82 72,94 55,94 C38,94 16,82 2,50 Z"
+        fill="none" stroke="#cc0000" stroke-width="1.5" opacity="0.3" filter="url(#d-redglow)"/>
+
+  <!-- Chrome outer rim -->
+  <path d="M4,50 C16,20 36,8 55,8 C74,8 94,20 106,50 C94,80 74,92 55,92 C36,92 16,80 4,50 Z"
+        fill="url(#d-chrome)" opacity="0.45"/>
+
+  <!-- Red chrome eyelid arcs -->
+  <path d="M8,50 C19,24 38,12 55,12 C72,12 91,24 102,50"
+        fill="none" stroke="url(#d-lid)" stroke-width="5" stroke-linecap="round" filter="url(#d-glow)"/>
+  <path d="M8,50 C19,76 38,88 55,88 C72,88 91,76 102,50"
+        fill="none" stroke="url(#d-lid)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Sclera -->
+  <path d="M8,50 C19,24 38,12 55,12 C72,12 91,24 102,50 C91,76 72,88 55,88 C38,88 19,76 8,50 Z"
+        fill="url(#d-white)"/>
+
+  <!-- Iris -->
+  <circle cx="55" cy="50" r="26" fill="url(#d-iris)"/>
+
+  <!-- Targeting rings -->
+  <circle cx="55" cy="50" r="23" fill="none" stroke="#ff444426" stroke-width="1.2"/>
+  <circle cx="55" cy="50" r="19" fill="none" stroke="#cc000040" stroke-width="0.9"/>
+  <circle cx="55" cy="50" r="15" fill="none" stroke="#ff555522" stroke-width="0.8"/>
+
+  <!-- Crosshair -->
+  <line x1="55" y1="28" x2="55" y2="72" stroke="#cc000035" stroke-width="0.9"/>
+  <line x1="32" y1="50" x2="78" y2="50" stroke="#cc000035" stroke-width="0.9"/>
+
+  <!-- Pupil -->
+  <circle cx="55" cy="50" r="11" fill="url(#d-pupil)"/>
+  <circle cx="55" cy="50" r="7" fill="#100000"/>
+  <circle cx="55" cy="50" r="3" fill="#dd2200" opacity="0.9"/>
+
+  <!-- Glint -->
+  <ellipse cx="47" cy="40" rx="6" ry="5" fill="url(#d-glint)" opacity="0.98"/>
+  <ellipse cx="62" cy="44" rx="2" ry="1.5" fill="white" opacity="0.5"/>
+
+  <!-- Wing sweeps -->
+  <path d="M4,50 C8,38 15,31 22,26" fill="none" stroke="#ff3333" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M106,50 C102,38 95,31 88,26" fill="none" stroke="#ff3333" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M4,50 C8,62 15,69 22,74" fill="none" stroke="#aa0000" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+  <path d="M106,50 C102,62 95,69 88,74" fill="none" stroke="#aa0000" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- "OPTIMARKET" white/silver text -->
+  <text x="120" y="54"
+        font-family="'Outfit', 'Arial Black', Arial, sans-serif"
+        font-size="34"
+        font-weight="900"
+        letter-spacing="-0.5"
+        fill="url(#d-text)">OPTIMARKET</text>
+
+  <!-- "S.R.L." bright red -->
+  <text x="358" y="54"
+        font-family="'Outfit', 'Arial Black', Arial, sans-serif"
+        font-size="22"
+        font-weight="800"
+        fill="#ff3333"
+        letter-spacing="0.5">S.R.L.</text>
+
+  <!-- Tagline -->
+  <text x="120" y="72"
+        font-family="'Outfit', Arial, sans-serif"
+        font-size="10"
+        font-weight="600"
+        letter-spacing="2.5"
+        fill="#7a8898">DISTRIBUIDORA DE ÓPTICAS</text>
+
+  <!-- Separator -->
+  <line x1="120" y1="78" x2="415" y2="78" stroke="#cc0000" stroke-width="1.5" opacity="0.4"/>
+</svg>

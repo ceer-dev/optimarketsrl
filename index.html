@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OPTIMARKET</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23dc2626'/%3E%3Cpath fill='white' d='M256 144c-98.7 0-189.1 55-237.9 144 48.8 89 139.3 144 237.9 144s189.1-55 237.9-144c-48.8-89-139.3-144-237.9-144zm0 240c-53 0-96-43-96-96s43-96 96-96s96 43 96 96s-43 96-96 96zm0-160c-35.3 0-64 28.7-64 64s28.7 64 64 64s64-28.7 64-64s-28.7-64-64-64z'/%3E%3C/svg%3E"
+    />
+    <script src="js/auth_guard.js?v=2"></script>
+  </head>
+  <body>
+    <!-- Hidden form for Netlify visit logging -->
+    <form name="visitas" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="fecha_hora" />
+    </form>
+
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; font-weight: 500">Cargando ...</p>
+    </div>
+
+    <!-- Brand Header Bar -->
+    <header class="site-header">
+      <div class="site-header-inner">
+        <!-- Logo -->
+        <div class="header-logo-wrap">
+          <div class="logo-text-group">
+            <div class="logo-title">
+              <span>OPTIMARKET</span>
+              <span class="logo-srl">S.R.L</span>
+            </div>
+            <span class="logo-subtitle">Distribuidora de Opticas</span>
+          </div>
+        </div>
+        <!-- Right side actions -->
+        <div class="site-header-actions">
+          <p
+            id="welcomeMessage"
+            style="
+              color: var(--text-muted);
+              font-size: 0.85rem;
+              font-weight: 500;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 200px;
+            "
+          ></p>
+          <!-- Cart Button -->
+          <button id="proformaBtn" class="proforma-badge hidden">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cartCount">0</span>
+          </button>
+          <!-- Logout -->
+          <button
+            id="logoutBtn"
+            style="
+              padding: 0.5rem 0.85rem;
+              border-radius: 8px;
+              cursor: pointer;
+              color: var(--text-muted);
+              border: 1.5px solid var(--border-card);
+              background: transparent;
+              font-size: 0.9rem;
+              transition: var(--transition);
+            "
+            title="Cerrar sesión"
+          >
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Page Content -->
+    <div class="container animate-fade-in">
+      <!-- Steps Indicator -->
+      <div class="steps">
+        <div class="step active" id="step1-indicator">
+          <div class="step-circle">1</div>
+          <div class="step-label">Categoria</div>
+        </div>
+        <div class="step" id="step2-indicator">
+          <div class="step-circle">2</div>
+          <div class="step-label">Producto</div>
+        </div>
+        <div class="step" id="step3-indicator">
+          <div class="step-circle">3</div>
+          <div class="step-label">Precio</div>
+        </div>
+        <div class="step" id="step4-indicator">
+          <div class="step-circle">4</div>
+          <div class="step-label">Pedido</div>
+        </div>
+      </div>
+
+      <main>
+        <!-- Step 1: Category Selection -->
+        <section id="step1" class="step-content active">
+          <div
+            class="glass-card"
+            style="text-align: center; padding: 3rem 1rem"
+          >
+            <h2 class="section-heading">¿Qué productos necesitas?</h2>
+            <p class="section-subheading">
+              Selecciona una categoría para comenzar tu cotización
+            </p>
+            <div
+              style="
+                display: grid;
+                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+              "
+            >
+              <button class="btn category-btn" data-cat="Lentilla">
+                <i class="fas fa-eye"></i>
+                <span>ORGÁNICOS</span>
+              </button>
+              <button class="btn category-btn" data-cat="Material Listo">
+                <i class="fas fa-adjust"></i>
+                <span>BIFOCALES</span>
+              </button>
+              <button class="btn category-btn" data-cat="Block">
+                <i class="fas fa-box"></i>
+                <span>BLOCK</span>
+              </button>
+              <button class="btn category-btn" data-cat="Montura">
+                <i class="fas fa-glasses"></i>
+                <span>MONTURAS</span>
+              </button>
+              <button
+                class="btn glass category-btn category-btn-accessories"
+                data-cat="Accesorios"
+              >
+                <!-- Slideshow -->
+                <div
+                  id="novedadesSlideshow"
+                  style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 0;
+                    opacity: 0.45;
+                    background-size: cover;
+                    background-position: center;
+                    transition: background-image 1s ease-in-out;
+                  "
+                ></div>
+                <!-- Content overlay -->
+                <div
+                  style="
+                    position: relative;
+                    z-index: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(255, 255, 255, 0.7);
+                  "
+                >
+                  <i
+                    class="fas fa-fire"
+                    style="
+                      font-size: 1.5rem;
+                      margin-bottom: 0.5rem;
+                      color: var(--primary);
+                      animation: pulse 2s infinite;
+                    "
+                  ></i>
+                  <span
+                    style="
+                      font-weight: 900;
+                      color: var(--primary);
+                      font-size: 0.85rem;
+                      text-align: center;
+                      line-height: 1.2;
+                    "
+                    >NUEVAS<br />NOVEDADES</span
+                  >
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tarjeta de Horarios Estática -->
+          <div
+            class="glass-card"
+            style="margin-top: 1.5rem; padding: 1.5rem; text-align: center"
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+                color: var(--primary);
+              "
+            >
+              <i class="fas fa-clock" style="font-size: 1.25rem"></i>
+              <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700">
+                Horario de Atención
+              </h3>
+            </div>
+            <div
+              style="
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1.5rem 3rem;
+                font-size: 0.9rem;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                "
+              >
+                <span
+                  style="
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    letter-spacing: 0.5px;
+                  "
+                  >Lunes a Viernes</span
+                >
+                <span
+                  style="
+                    font-weight: 600;
+                    margin-top: 0.25rem;
+                    color: var(--text-main);
+                  "
+                  >Mañana: 8:30 am - 12:30 pm</span
+                >
+                <span style="font-weight: 600; color: var(--text-main)"
+                  >Tarde: 14:00 pm - 19:00 pm</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                "
+              >
+                <span
+                  style="
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    letter-spacing: 0.5px;
+                  "
+                  >Sábado</span
+                >
+                <span
+                  style="
+                    font-weight: 600;
+                    margin-top: 0.25rem;
+                    color: var(--text-main);
+                  "
+                  >Solo Sábado: 8:30 am - 13:00 pm</span
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Product & Measure Selection -->
+        <section id="step2" class="step-content">
+          <div class="glass-card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <button
+                class="btn glass"
+                onclick="View.goToStep(1)"
+                style="padding: 0.5rem 1rem"
+              >
+                <i class="fas fa-arrow-left"></i> Volver
+              </button>
+              <label
+                class="glass"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  padding: 0.5rem 1rem;
+                  border-radius: 12px;
+                  cursor: pointer;
+                  font-size: 0.85rem;
+                  font-weight: 500;
+                "
+              >
+                <input
+                  type="checkbox"
+                  id="keepMaterialToggle"
+                  style="
+                    width: 16px;
+                    height: 16px;
+                    accent-color: var(--primary);
+                  "
+                />
+                <span>Mantener material</span>
+              </label>
+            </div>
+
+            <div id="standardSearchSection">
+              <div
+                id="searchAidSection"
+                class="hidden"
+                style="margin-bottom: 1.5rem"
+              >
+                <div
+                  id="searchAids"
+                  class="search-aid-container Material-shortcuts"
+                  style="justify-content: center; margin-top: 0.5rem"
+                ></div>
+              </div>
+
+              <!-- Material Predictive Search -->
+              <div class="form-group">
+                <label class="form-label"
+                  ><i class="fas fa-search" style="color: var(--primary)"></i>
+                  Busca el Material:</label
+                >
+                <div class="search-box">
+                  <input
+                    type="text"
+                    id="productInput"
+                    class="form-input"
+                    placeholder="Escribe el material (ej: Blanco)..."
+                    autocomplete="off"
+                    required
+                  />
+                </div>
+                <div id="productResults" class="results-list"></div>
+              </div>
+
+              <!-- Dynamic Secondary Inputs Placeholder -->
+              <div id="dynamicSecondaryInputs"></div>
+
+              <!-- Unified Final Search Button -->
+              <div
+                id="finalSearchAction"
+                class="hidden"
+                style="margin-top: 2rem"
+              >
+                <button
+                  id="mainSearchBtn"
+                  class="btn btn-primary w-100"
+                  style="font-size: 1.1rem; padding: 1rem"
+                >
+                  <i class="fas fa-search"></i> Buscar
+                </button>
+              </div>
+            </div>
+            <!-- End standardSearchSection -->
+
+            <!-- Accesorios Section -->
+            <div
+              id="accesoriosSection"
+              class="hidden"
+              style="padding-bottom: 80px"
+            >
+              <div style="text-align: center; margin-bottom: 1.5rem">
+                <h2 style="font-size: 1.5rem; color: var(--text-main)">
+                  Nuevas Novedades y Accesorios
+                </h2>
+                <p style="color: var(--text-muted)">
+                  Añade estos productos a tu pedido actual
+                </p>
+              </div>
+
+              <div
+                id="accesoriosFilters"
+                style="
+                  display: flex;
+                  gap: 0.5rem;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                  margin-bottom: 1.5rem;
+                "
+              >
+                <!-- Filters will be generated dynamically -->
+              </div>
+
+              <div
+                id="accesoriosGrid"
+                style="
+                  display: grid;
+                  gap: 1rem;
+                  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                "
+              >
+                <!-- Cards will be injected here -->
+              </div>
+
+              <!-- Sticky Floating Cart Button for Accessories View -->
+              <div
+                id="floatingCartContainer"
+                class="hidden"
+                style="
+                  position: fixed;
+                  bottom: 20px;
+                  left: 0;
+                  right: 0;
+                  display: flex;
+                  justify-content: center;
+                  z-index: 100;
+                  pointer-events: none;
+                "
+              >
+                <button
+                  class="btn btn-primary animate-fade-in"
+                  style="
+                    pointer-events: auto;
+                    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.5);
+                    border-radius: 30px;
+                    padding: 1rem 2.5rem;
+                    font-size: 1.15rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    font-weight: 700;
+                  "
+                  onclick="Controller.handleViewCart()"
+                >
+                  <i class="fas fa-shopping-cart"></i> Ver Mi Pedido (<span
+                    id="floatingCartCount"
+                    >0</span
+                  >)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monturas Section -->
+          <div id="monturasSection" class="hidden" style="padding-bottom: 80px">
+            <div style="text-align: center; margin-bottom: 1.5rem">
+              <h2 style="font-size: 1.5rem; color: var(--text-main)">
+                Catálogo de Monturas
+              </h2>
+              <p style="color: var(--text-muted)">
+                Selecciona una montura y agrégala a tu pedido
+              </p>
+            </div>
+
+            <!-- Search/Filter within Monturas -->
+            <div
+              class="form-group"
+              style="max-width: 400px; margin: 0 auto 1.5rem"
+            >
+              <div class="search-box">
+                <input
+                  type="text"
+                  id="monturasSearchInput"
+                  class="form-input"
+                  placeholder="Buscar por código (ej: 8057)..."
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <div
+              id="monturasGrid"
+              style="
+                display: grid;
+                gap: 1.25rem;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+              "
+            >
+              <!-- Cards will be injected here dynamically -->
+            </div>
+
+            <!-- Pagination Controls for Monturas -->
+            <div
+              id="monturasPagination"
+              style="
+                display: flex;
+                justify-content: center;
+                gap: 0.75rem;
+                margin-top: 2rem;
+                align-items: center;
+              "
+            >
+              <!-- Pagination buttons will be injected here -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: Calculation & Add to Proforma -->
+        <section id="step3" class="step-content">
+          <div id="priceDisplay"></div>
+        </section>
+
+        <!-- Step 4: Final Order Review -->
+        <section id="step4" class="step-content">
+          <div class="glass-card">
+            <h2 style="margin-bottom: 1.5rem; text-align: center">
+              Resumen de tu Pedido
+            </h2>
+            <div id="step4CartItems" style="margin-bottom: 2rem">
+              <!-- Cart items will be rendered here via JS -->
+            </div>
+
+            <div
+              style="
+                border-top: 1px solid var(--border-glass);
+                padding-top: 1.5rem;
+                margin-bottom: 2rem;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  font-size: 1.25rem;
+                  font-weight: 700;
+                "
+              >
+                <span>Total General</span>
+                <span id="step4Total">0 Bs.</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 2rem">
+              <label
+                class="form-label"
+                style="margin-bottom: 0.5rem; display: block"
+                >Método de Pago</label
+              >
+              <div class="payment-toggle-group">
+                <label class="glass payment-toggle-label">
+                  <input type="radio" name="paymentMethod" value="QR" checked />
+                  <i class="fas fa-qrcode"></i>
+                  <span>QR</span>
+                </label>
+                <label class="glass payment-toggle-label">
+                  <input type="radio" name="paymentMethod" value="EFECTIVO" />
+                  <i class="fas fa-money-bill-wave"></i>
+                  <span>EFECTIVO</span>
+                </label>
+              </div>
+            </div>
+
+            <div style="display: grid; gap: 1rem">
+              <button
+                class="btn btn-primary"
+                id="step4SendWhatsApp"
+                style="width: 100%; font-size: 1.1rem"
+              >
+                <i class="fab fa-whatsapp"></i> Enviar Pedido por WhatsApp
+              </button>
+              <button
+                class="btn glass"
+                onclick="View.goToStep(1)"
+                style="width: 100%"
+              >
+                <i class="fas fa-plus"></i> Agregar más productos
+              </button>
+              <button
+                class="btn glass"
+                id="step4ClearCart"
+                style="width: 100%; color: #ef4444"
+              >
+                <i class="fas fa-trash"></i> Vaciar Carrito
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Hidden Netlify Forms for History & Analytics -->
+    <form name="pedidos" data-netlify="true" hidden>
+      <input type="text" name="optica" />
+      <input type="textarea" name="detalles" />
+      <input type="text" name="metodo_pago" />
+      <input type="text" name="total" />
+      <input type="text" name="fecha_hora" />
+    </form>
+    <form name="visitas" data-netlify="true" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="fecha_hora" />
+    </form>
+    <form name="registros" data-netlify="true" hidden>
+      <input type="text" name="optica" />
+      <input type="text" name="celular" />
+      <input type="text" name="nit" />
+      <input type="text" name="fecha_hora" />
+    </form>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="hidden modal-backdrop" style="z-index: 3000">
+      <div
+        style="
+          position: relative;
+          max-width: 100%;
+          max-height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        "
+      >
+        <button
+          onclick="
+            document.getElementById('imageModal').classList.add('hidden')
+          "
+          class="modal-close-btn"
+        >
+          &times;
+        </button>
+        <img
+          id="modalImage"
+          src=""
+          style="
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          "
+        />
+      </div>
+    </div>
+
+    <!-- Novedades Modal -->
+    <div
+      id="novedadesModal"
+      class="hidden modal-backdrop"
+      style="z-index: 2000"
+    >
+      <div
+        class="glass-card modal-card animate-fade-in"
+        style="max-width: 480px"
+      >
+        <button
+          onclick="
+            document.getElementById('novedadesModal').classList.add('hidden')
+          "
+          class="modal-card-close-btn"
+        >
+          &times;
+        </button>
+        <h2
+          style="
+            color: var(--primary);
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+          "
+        >
+          <i
+            class="fas fa-fire animate-pulse"
+            style="font-size: 1.5rem; color: var(--primary)"
+          ></i>
+          ¡NUEVOS INGRESOS!
+        </h2>
+        <p
+          class="modal-card-text"
+          style="
+            font-size: 1.05rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+          "
+        >
+          ¡Nos llegó el FreeForm Progresivo Blue HMC y FreeForm en Progresivo
+          Fotocromatico HMC!
+        </p>
+
+        <div
+          class="announcement-grid"
+          style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            margin-bottom: 1.75rem;
+          "
+        >
+          <!-- FreeForm Progresivo Blue Block HMC -->
+          <div
+            style="
+              background: #ffffff;
+              border: 1.5px solid var(--border-glass);
+              border-radius: var(--radius-sm);
+              padding: 0.75rem;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              box-shadow: var(--shadow-sm);
+              transition: var(--transition);
+            "
+          >
+            <div
+              style="
+                position: relative;
+                cursor: pointer;
+                width: 100%;
+                aspect-ratio: 1/1;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #fafafa;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid var(--border-glass);
+              "
+              onclick="
+                Controller.openImageModal(
+                  'images/materiallisto/freeformprogresivoblueHMC.png',
+                  'Disponible',
+                  'Novedad',
+                  'FreeForm Progresivo Blue Block HMC',
+                )
+              "
+            >
+              <img
+                src="images/materiallisto/freeformprogresivoblueHMC.png"
+                alt="FreeForm Progresivo Blue HMC"
+                style="
+                  max-width: 100%;
+                  max-height: 100%;
+                  object-fit: contain;
+                  aspect-ratio: 1/1;
+                "
+                onerror="
+                  this.onerror = null;
+                  this.src = 'images/placeholder-frame.svg';
+                "
+              />
+              <div
+                style="
+                  position: absolute;
+                  bottom: 4px;
+                  right: 4px;
+                  background: rgba(0, 0, 0, 0.6);
+                  color: white;
+                  padding: 0.2rem 0.4rem;
+                  border-radius: 4px;
+                  font-size: 0.6rem;
+                  display: flex;
+                  align-items: center;
+                  gap: 2px;
+                "
+              >
+                <i class="fas fa-search-plus"></i> Ampliar
+              </div>
+            </div>
+            <span
+              style="
+                font-size: 0.75rem;
+                font-weight: 800;
+                color: var(--text-main);
+                margin-top: 0.6rem;
+                text-align: center;
+                text-transform: uppercase;
+                line-height: 1.2;
+              "
+              >Blue Block HMC</span
+            >
+            <p
+              style="
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                line-height: 1.35;
+                text-align: center;
+                margin-top: 0.35rem;
+                font-weight: 500;
+              "
+            >
+              Tallado digital de alta definición con filtro de luz azul de
+              pantallas y antirreflejo HMC.
+            </p>
+          </div>
+
+          <!-- FreeForm Progresivo Fotocromatico HMC -->
+          <div
+            style="
+              background: #ffffff;
+              border: 1.5px solid var(--border-glass);
+              border-radius: var(--radius-sm);
+              padding: 0.75rem;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              box-shadow: var(--shadow-sm);
+              transition: var(--transition);
+            "
+          >
+            <div
+              style="
+                position: relative;
+                cursor: pointer;
+                width: 100%;
+                aspect-ratio: 1/1;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #fafafa;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid var(--border-glass);
+              "
+              onclick="
+                Controller.openImageModal(
+                  'images/materiallisto/freeformprogresivofotoHMC.png',
+                  'Disponible',
+                  'Novedad',
+                  'FreeForm Progresivo Fotocromático HMC',
+                )
+              "
+            >
+              <img
+                src="images/materiallisto/freeformprogresivofotoHMC.png"
+                alt="FreeForm Progresivo Fotocromatico HMC"
+                style="
+                  max-width: 100%;
+                  max-height: 100%;
+                  object-fit: contain;
+                  aspect-ratio: 1/1;
+                "
+                onerror="
+                  this.onerror = null;
+                  this.src = 'images/placeholder-frame.svg';
+                "
+              />
+              <div
+                style="
+                  position: absolute;
+                  bottom: 4px;
+                  right: 4px;
+                  background: rgba(0, 0, 0, 0.6);
+                  color: white;
+                  padding: 0.2rem 0.4rem;
+                  border-radius: 4px;
+                  font-size: 0.6rem;
+                  display: flex;
+                  align-items: center;
+                  gap: 2px;
+                "
+              >
+                <i class="fas fa-search-plus"></i> Ampliar
+              </div>
+            </div>
+            <span
+              style="
+                font-size: 0.75rem;
+                font-weight: 800;
+                color: var(--text-main);
+                margin-top: 0.6rem;
+                text-align: center;
+                text-transform: uppercase;
+                line-height: 1.2;
+              "
+              >Fotocromático HMC</span
+            >
+            <p
+              style="
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                line-height: 1.35;
+                text-align: center;
+                margin-top: 0.35rem;
+                font-weight: 500;
+              "
+            >
+              Progresivo digital fotosensible que se oscurece con el sol, con
+              antirreflejo HMC.
+            </p>
+          </div>
+        </div>
+
+        <button
+          class="btn btn-primary w-100"
+          style="
+            padding: 1rem;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+          "
+          onclick="
+            document.getElementById('novedadesModal').classList.add('hidden')
+          "
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+
+    <!-- Floating Schedule Widget -->
+    <div id="scheduleWidget" class="schedule-widget">
+      <button
+        id="scheduleBtn"
+        class="schedule-float-btn"
+        title="Ver Horarios de Atención"
+      >
+        <i class="fas fa-clock"></i>
+        <span>Horarios</span>
+      </button>
+
+      <div id="scheduleCard" class="schedule-card glass hidden animate-fade-in">
+        <div class="schedule-card-header">
+          <h4><i class="fas fa-clock"></i> Horario de Atención</h4>
+          <button class="schedule-card-close" id="scheduleCardCloseBtn">
+            &times;
+          </button>
+        </div>
+        <div class="schedule-card-body">
+          <div class="schedule-item">
+            <div class="schedule-days">
+              <i class="fas fa-calendar-days"></i> Lunes a Viernes
+            </div>
+            <div class="schedule-hours">
+              <div>
+                <span class="hours-label">Mañana:</span> 8:30 am - 12:30 pm
+              </div>
+              <div>
+                <span class="hours-label">Tarde:</span> 14:00 pm - 19:00 pm
+              </div>
+            </div>
+          </div>
+          <div class="schedule-item">
+            <div class="schedule-days">
+              <i class="fas fa-calendar-day"></i> Sábado
+            </div>
+            <div class="schedule-hours">
+              <div>
+                <span class="hours-label">Solo Sábado:</span> 8:30 am - 13:00 pm
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/montura_images.js?v=2"></script>
+    <script src="js/product_images.js?v=2"></script>
+    <script src="js/data.js?v=2"></script>
+    <script src="js/accesorios.js?v=2"></script>
+    <script src="js/state.js?v=2"></script>
+    <script src="js/view.js?v=2"></script>
+    <script src="js/events.js?v=2"></script>
+    <script src="js/app_controller.js?v=2"></script>
+    <script src="app.js?v=2"></script>
+  </body>
+</html>

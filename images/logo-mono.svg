@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" width="420" height="100" role="img" aria-label="OPTIMARKET S.R.L. — Monocromático">
+  <title>OPTIMARKET S.R.L. — Monochrome</title>
+  <defs>
+    <radialGradient id="m-iris" cx="42%" cy="38%" r="58%">
+      <stop offset="0%" stop-color="#555"/>
+      <stop offset="50%" stop-color="#333"/>
+      <stop offset="100%" stop-color="#111"/>
+    </radialGradient>
+    <radialGradient id="m-pupil" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="m-white" cx="50%" cy="43%" r="60%">
+      <stop offset="0%" stop-color="#e0e0e0"/>
+      <stop offset="100%" stop-color="#aaa"/>
+    </radialGradient>
+    <radialGradient id="m-glint" cx="32%" cy="32%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#ffffffaa"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <linearGradient id="m-chrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#aaa"/>
+      <stop offset="50%" stop-color="#ddd"/>
+      <stop offset="100%" stop-color="#666"/>
+    </linearGradient>
+    <linearGradient id="m-text" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#444"/>
+      <stop offset="35%" stop-color="#111"/>
+      <stop offset="100%" stop-color="#555"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Chrome outer rim -->
+  <path d="M2,50 C16,18 38,6 55,6 C72,6 94,18 108,50 C94,82 72,94 55,94 C38,94 16,82 2,50 Z"
+        fill="url(#m-chrome)" opacity="0.4"/>
+
+  <!-- Top lid -->
+  <path d="M8,50 C19,24 38,12 55,12 C72,12 91,24 102,50"
+        fill="none" stroke="#444" stroke-width="5" stroke-linecap="round"/>
+  <!-- Bottom lid -->
+  <path d="M8,50 C19,76 38,88 55,88 C72,88 91,76 102,50"
+        fill="none" stroke="#444" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Sclera -->
+  <path d="M8,50 C19,24 38,12 55,12 C72,12 91,24 102,50 C91,76 72,88 55,88 C38,88 19,76 8,50 Z"
+        fill="url(#m-white)"/>
+
+  <!-- Iris -->
+  <circle cx="55" cy="50" r="26" fill="url(#m-iris)"/>
+
+  <!-- Rings -->
+  <circle cx="55" cy="50" r="23" fill="none" stroke="#55555522" stroke-width="1.2"/>
+  <circle cx="55" cy="50" r="19" fill="none" stroke="#33333333" stroke-width="0.9"/>
+  <circle cx="55" cy="50" r="15" fill="none" stroke="#44444422" stroke-width="0.8"/>
+
+  <!-- Crosshair -->
+  <line x1="55" y1="28" x2="55" y2="72" stroke="#33333325" stroke-width="0.9"/>
+  <line x1="32" y1="50" x2="78" y2="50" stroke="#33333325" stroke-width="0.9"/>
+
+  <!-- Pupil -->
+  <circle cx="55" cy="50" r="11" fill="url(#m-pupil)"/>
+  <circle cx="55" cy="50" r="7" fill="#0a0a0a"/>
+  <circle cx="55" cy="50" r="3" fill="#555" opacity="0.7"/>
+
+  <!-- Glint -->
+  <ellipse cx="47" cy="40" rx="6" ry="5" fill="url(#m-glint)" opacity="0.9"/>
+  <ellipse cx="62" cy="44" rx="2" ry="1.5" fill="white" opacity="0.45"/>
+
+  <!-- Wing sweeps -->
+  <path d="M4,50 C8,38 15,31 22,26" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M106,50 C102,38 95,31 88,26" fill="none" stroke="#555" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M4,50 C8,62 15,69 22,74" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+  <path d="M106,50 C102,62 95,69 88,74" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+
+  <!-- "OPTIMARKET" text -->
+  <text x="120" y="54"
+        font-family="'Outfit', 'Arial Black', Arial, sans-serif"
+        font-size="34"
+        font-weight="900"
+        letter-spacing="-0.5"
+        fill="url(#m-text)">OPTIMARKET</text>
+
+  <!-- "S.R.L." dark -->
+  <text x="358" y="54"
+        font-family="'Outfit', 'Arial Black', Arial, sans-serif"
+        font-size="22"
+        font-weight="800"
+        fill="#444"
+        letter-spacing="0.5">S.R.L.</text>
+
+  <!-- Tagline -->
+  <text x="120" y="72"
+        font-family="'Outfit', Arial, sans-serif"
+        font-size="10"
+        font-weight="600"
+        letter-spacing="2.5"
+        fill="#888">DISTRIBUIDORA DE ÓPTICAS</text>
+
+  <!-- Separator -->
+  <line x1="120" y1="78" x2="415" y2="78" stroke="#666" stroke-width="1.5" opacity="0.35"/>
+</svg>
