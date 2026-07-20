@@ -902,6 +902,7 @@ const Controller = {
               alt="Código ${code}" 
               onerror="this.onerror=null; this.src='images/placeholder-frame.svg';" 
               loading="lazy"
+              decoding="async"
               style="max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.3s ease;"
             />
             <span class="badge" style="position: absolute; top: 8px; right: 8px; font-size: 0.75rem; background: var(--bg-header); color: #ffffff;">${material}</span>
@@ -1161,7 +1162,7 @@ const Controller = {
 
       card.innerHTML = `
         <div style="width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 8px; cursor:pointer; background: transparent;" onclick="Controller.openImageModal('${imgSrc}')">
-          <img src="${imgSrc}" loading="lazy" style="width: 100%; height: 100%; object-fit: contain;">
+          <img src="${imgSrc}" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: contain;">
         </div>
         ${labelHTML}
         
