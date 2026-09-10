@@ -6,5 +6,8 @@
   "scripts": {
     "test": "node --check js/*.js app.js && python scripts/validate_catalog.py",
     "validate:prices": "python scripts/validate_catalog.py"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.43.1"
   }
 }

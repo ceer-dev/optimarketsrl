@@ -1,0 +1,13 @@
+{
+  "coldTti": 2501,
+  "coldBytes": 201168,
+  "coldRequests": 23,
+  "warmTti": 1030,
+  "warmBytes": 201168,
+  "warmRequests": 34,
+  "imageRequestsCount": 4,
+  "imageTotalBytes": 0,
+  "imageRenderTime": 101,
+  "changeImageRequestsCount": 0,
+  "changeRenderTime": 20
+}
