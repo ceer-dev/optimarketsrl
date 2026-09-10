@@ -74,7 +74,10 @@ async function runTest() {
       sessionStorage.setItem('novedadesShown', 'true');
     });
 
-    console.log('Navigating to http://127.0.0.1:3000/index.html ...');
+    page.on('console', (msg) => console.log('[PAGE]', msg.text()));
+    page.on('pageerror', (err) => console.error('[PAGE ERROR]', err));
+
+    console.log(`Navigating to http://127.0.0.1:${PORT}/index.html ...`);
     await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
     // Wait for categories
@@ -91,9 +94,9 @@ async function runTest() {
     await page.click('button[data-cat="Lentilla"]');
     console.log('[OK] Lentilla category clicked successfully.');
 
-    // Wait for subcategories
-    await page.waitForSelector('#subcategorySection', { visible: true, timeout: 10000 });
-    console.log('[OK] Subcategories visible.');
+    // Wait for Step 2 view to become active
+    await page.waitForSelector('#step2', { visible: true, timeout: 10000 });
+    console.log('[OK] Step 2 view is active and visible.');
 
     console.log('[OK] All Smoke Tests Passed Successfully!');
   } finally {
