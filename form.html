@@ -1,17 +1,25 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OPTIMARKET - Identificación de Óptica</title>
-    <meta name="description" content="Ingreso y registro comercial para ópticas en la plataforma de OPTIMARKET S.R.L." />
+    <title>OPTIMARKET S.R.L. — Identificación de Óptica</title>
+    <meta
+      name="description"
+      content="Registro e identificación comercial para ópticas en la plataforma de catálogo y pedidos de OPTIMARKET S.R.L."
+    />
 
-    <!-- Google Fonts Preconnect & Optimized Load -->
+    <!-- Favicon Oficial con alternativas SVG y PNG -->
+    <link rel="icon" type="image/svg+xml" href="images/optimarket_eye_logo.svg" />
+    <link rel="alternate icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="images/favicon-192x192.png" />
+
+    <!-- Google Fonts Preconnect & Optimized Load (Outfit para marca y titulares) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
     />
 
     <!-- Local Stylesheet -->
@@ -32,11 +40,320 @@
       />
     </noscript>
 
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23dc2626'/%3E%3Cpath fill='white' d='M256 144c-98.7 0-189.1 55-237.9 144 48.8 89 139.3 144 237.9 144s189.1-55 237.9-144c-48.8-89-139.3-144-237.9-144zm0 240c-53 0-96-43-96-96s43-96 96-96s96 43 96 96s-43 96-96 96zm0-160c-35.3 0-64 28.7-64 64s28.7 64 64 64s64-28.7 64-64s-28.7-64-64-64z'/%3E%3C/svg%3E"
-    />
+    <style>
+      :root {
+        --om-primary: #d90429;
+        --om-primary-hover: #b90322;
+        --om-primary-glow: rgba(217, 4, 41, 0.28);
+        --om-bg-dark: #07090e;
+        --om-bg-surface: #0e1219;
+        --om-bg-card: rgba(14, 18, 26, 0.94);
+        --om-border: rgba(255, 255, 255, 0.08);
+        --om-text-main: #f8fafc;
+        --om-text-muted: #94a3b8;
+        --om-text-sub: #64748b;
+      }
+
+      body.registration-page {
+        background-color: var(--om-bg-dark);
+        color: var(--om-text-main);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow-x: hidden;
+        padding: 1.5rem 1rem;
+        background-image:
+          radial-gradient(circle at 50% 50%, rgba(217, 4, 41, 0.05) 0%, transparent 60%),
+          radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 100% 100%, 32px 32px;
+      }
+
+      /* Retícula y Anillos Ópticos Estáticos (Ultraligeros sin costo de GPU) */
+      .optical-lens-backdrop {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .lens-ring {
+        position: absolute;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .ring-1 { width: 360px; height: 360px; border: 1px solid rgba(217, 4, 41, 0.1); }
+      .ring-2 { width: 580px; height: 580px; border: 1px solid rgba(255, 255, 255, 0.03); }
+      .ring-3 { width: 880px; height: 880px; border: 1px solid rgba(217, 4, 41, 0.05); }
+
+      .optical-axis-h {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.03) 20%, rgba(217, 4, 41, 0.15) 50%, rgba(255, 255, 255, 0.03) 80%, transparent 100%);
+      }
+
+      .optical-axis-v {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.03) 20%, rgba(217, 4, 41, 0.15) 50%, rgba(255, 255, 255, 0.03) 80%, transparent 100%);
+      }
+
+      /* Tarjeta de Registro Industrial Optiweb */
+      .registration-container {
+        position: relative;
+        z-index: 10;
+        width: 460px;
+        max-width: 94vw;
+        background: var(--om-bg-card);
+        border: 1px solid var(--om-border);
+        border-radius: 18px;
+        padding: 38px 32px 30px 32px;
+        box-shadow:
+          0 20px 50px rgba(0, 0, 0, 0.7),
+          0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      .registration-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 20%;
+        right: 20%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #d90429 50%, transparent);
+        box-shadow: 0 0 8px rgba(217, 4, 41, 0.7);
+        border-radius: 999px;
+      }
+
+      .registration-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .brand-logo-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      .registration-brand-logo {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        display: block;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+      }
+
+      .registration-badge-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        background: rgba(217, 4, 41, 0.08);
+        border: 1px solid rgba(217, 4, 41, 0.25);
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #ff4d6d;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #d90429;
+        box-shadow: 0 0 6px #d90429;
+      }
+
+      .registration-subtitle {
+        font-size: 12.5px;
+        color: var(--om-text-sub);
+        letter-spacing: 0.2px;
+        line-height: 1.4;
+      }
+
+      /* Grupos y Campos del Formulario */
+      .reg-form-group {
+        margin-bottom: 18px;
+        position: relative;
+      }
+
+      .reg-form-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--om-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 7px;
+      }
+
+      .reg-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .reg-input-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--om-text-sub);
+        pointer-events: none;
+        font-size: 14px;
+        transition: color 0.2s ease;
+      }
+
+      .reg-form-control {
+        width: 100%;
+        height: 46px;
+        background: rgba(8, 11, 17, 0.85);
+        border: 1px solid var(--om-border);
+        border-radius: 10px;
+        padding: 0 16px 0 42px;
+        font-size: 14px;
+        color: var(--om-text-main);
+        outline: none;
+        transition: all 0.2s ease;
+      }
+
+      .reg-form-control::placeholder {
+        color: rgba(148, 163, 184, 0.45);
+        font-size: 13.5px;
+      }
+
+      .reg-form-control:focus {
+        background: rgba(11, 15, 23, 0.95);
+        border-color: var(--om-primary);
+        box-shadow: 0 0 0 3px var(--om-primary-glow);
+      }
+
+      .reg-form-control:focus ~ .reg-input-icon {
+        color: var(--om-primary);
+      }
+
+      .phone-prefix-tag {
+        position: absolute;
+        left: 38px;
+        color: var(--om-text-muted);
+        font-weight: 700;
+        font-size: 13.5px;
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .reg-form-control.phone-input {
+        padding-left: 82px;
+      }
+
+      /* Botón Industrial Principal */
+      .btn-submit-registration {
+        width: 100%;
+        height: 48px;
+        background: linear-gradient(135deg, #d90429 0%, #a0031e 100%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 8px 20px -4px rgba(217, 4, 41, 0.45);
+        transition: all 0.2s ease;
+        margin-top: 1.25rem;
+      }
+
+      .btn-submit-registration:hover {
+        background: linear-gradient(135deg, #ef0833 0%, #b90322 100%);
+        transform: translateY(-1.5px);
+        box-shadow: 0 12px 26px -4px rgba(217, 4, 41, 0.6);
+      }
+
+      .btn-submit-registration:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 12px -2px rgba(217, 4, 41, 0.4);
+      }
+
+      .btn-submit-registration:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      /* Alerta de Error / Validación Inline */
+      .alert-banner {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        margin-bottom: 18px;
+        text-align: center;
+      }
+
+      /* Pie de Tarjeta Institucional */
+      .registration-footer {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .reg-footer-copy {
+        font-size: 11.5px;
+        color: var(--om-text-sub);
+        font-weight: 600;
+      }
+
+      .reg-footer-sub {
+        font-size: 10.5px;
+        color: rgba(100, 116, 139, 0.7);
+        letter-spacing: 0.3px;
+      }
+
+      @media (max-width: 480px) {
+        .registration-container {
+          padding: 28px 20px 22px 20px;
+        }
+        .registration-brand-logo {
+          max-width: 260px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+
     <script>
       // Auth Check: fast redirect without artificial blank page
       if (localStorage.getItem("registeredClient")) {
@@ -45,8 +362,17 @@
       }
     </script>
   </head>
-  <body>
-    <!-- Hidden forms for Netlify logging -->
+  <body class="registration-page">
+    <!-- Retícula y Anillos Ópticos Estáticos -->
+    <div class="optical-lens-backdrop">
+      <div class="lens-ring ring-1"></div>
+      <div class="lens-ring ring-2"></div>
+      <div class="lens-ring ring-3"></div>
+      <div class="optical-axis-h"></div>
+      <div class="optical-axis-v"></div>
+    </div>
+
+    <!-- Formularios ocultos de Netlify Forms -->
     <form name="registros" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="optica" />
       <input type="text" name="celular" />
@@ -58,112 +384,148 @@
       <input type="text" name="fecha_hora" />
     </form>
 
-    <div class="flex-center">
-      <div class="container" style="max-width: 500px">
-        <div class="glass-card animate-fade-in">
-          <div style="text-align: center; margin-bottom: 2rem">
-            <h1
-              class="text-gradient"
-              style="
-                font-size: 2.22rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.1rem;
-                line-height: 1;
-                margin: 0 0 0.5rem 0;
-              "
-            >
-              <i
-                class="fas fa-eye"
-                style="
-                  font-size: 1.8rem;
-                  margin-right: 0.1rem;
-                  color: var(--primary);
-                "
-              ></i
-              >PTIMARKET
-            </h1>
-            <p style="color: var(--text-muted)">Bienvenido</p>
-          </div>
-
-          <form id="registrationForm">
-            <div class="form-group">
-              <label for="opticaName" class="form-label"
-                >Nombre de Optica *</label
-              >
-              <input
-                type="text"
-                id="opticaName"
-                name="optica"
-                class="form-input"
-                placeholder="Ej: Vision Extreme"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="phoneNumber" class="form-label"
-                >Numero de Celular *</label
-              >
-              <div style="position: relative">
-                <span
-                  style="
-                    position: absolute;
-                    left: 1rem;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: var(--text-muted);
-                    font-weight: 500;
-                  "
-                  >+591</span
-                >
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  name="celular"
-                  class="form-input"
-                  style="padding-left: 3.5rem"
-                  placeholder="70000000"
-                  maxlength="8"
-                  pattern="[0-9]{8}"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="nit" class="form-label">NIT (Opcional)</label>
-              <input
-                type="text"
-                id="nit"
-                name="nit"
-                class="form-input"
-                placeholder="000000000-0"
-              />
-            </div>
-
-            <button
-              type="submit"
-              class="btn btn-primary"
-              style="width: 100%; margin-top: 1rem"
-            >
-              Ingresar <i class="fas fa-arrow-right"></i>
-            </button>
-          </form>
+    <!-- Tarjeta Principal de Registro -->
+    <main class="registration-container" role="main">
+      <!-- Encabezado con Logotipo Oficial Optiweb -->
+      <div class="registration-header">
+        <div class="brand-logo-wrapper">
+          <img
+            src="images/optimarket_logo_mejorado.svg"
+            alt="OPTIMARKET S.R.L. - Laboratorio Óptico & Distribuidora"
+            class="registration-brand-logo"
+          />
         </div>
+        <div class="registration-badge-tag">
+          <span class="badge-dot"></span>
+          <span>Identificación de Óptica</span>
+        </div>
+        <p class="registration-subtitle">Consulta de Catálogo y Cotizaciones Mayoristas</p>
       </div>
-    </div>
+
+      <!-- Banner de Alerta de Error / Validación -->
+      <div id="regAlert" class="alert-banner" role="alert" style="display: none;"></div>
+
+      <!-- Formulario de Registro de Visitante (sin usuario ni contraseña) -->
+      <form id="registrationForm" novalidate>
+        <!-- Campo: Nombre de Óptica -->
+        <div class="reg-form-group">
+          <label for="opticaName" class="reg-form-label">
+            <span>Nombre de Óptica *</span>
+          </label>
+          <div class="reg-input-wrapper">
+            <input
+              type="text"
+              id="opticaName"
+              name="optica"
+              class="reg-form-control"
+              placeholder="Ej: Visión Extreme"
+              required
+              autocomplete="organization"
+              spellcheck="false"
+            />
+            <span class="reg-input-icon">
+              <i class="fas fa-store"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Campo: Número de Celular -->
+        <div class="reg-form-group">
+          <label for="phoneNumber" class="reg-form-label">
+            <span>Número de Celular *</span>
+          </label>
+          <div class="reg-input-wrapper">
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="celular"
+              class="reg-form-control phone-input"
+              placeholder="70000000"
+              maxlength="8"
+              pattern="[0-9]{8}"
+              required
+              autocomplete="tel"
+            />
+            <span class="reg-input-icon">
+              <i class="fas fa-phone-alt"></i>
+            </span>
+            <span class="phone-prefix-tag">+591</span>
+          </div>
+        </div>
+
+        <!-- Campo: NIT (Opcional) -->
+        <div class="reg-form-group">
+          <label for="nit" class="reg-form-label">
+            <span>NIT (Opcional)</span>
+          </label>
+          <div class="reg-input-wrapper">
+            <input
+              type="text"
+              id="nit"
+              name="nit"
+              class="reg-form-control"
+              placeholder="000000000-0"
+              autocomplete="off"
+            />
+            <span class="reg-input-icon">
+              <i class="fas fa-id-card"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Botón de Envío -->
+        <button
+          type="submit"
+          id="btnSubmitRegistration"
+          class="btn-submit-registration"
+        >
+          <span>Acceder al Catálogo</span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <!-- Pie de Tarjeta Institucional -->
+      <div class="registration-footer">
+        <p class="reg-footer-copy">OPTIMARKET S.R.L. • Catálogo Digital</p>
+        <p class="reg-footer-sub">Laboratorio Óptico &amp; Distribuidora Mayorista</p>
+      </div>
+    </main>
 
     <script>
       const form = document.getElementById("registrationForm");
+      const submitBtn = document.getElementById("btnSubmitRegistration");
+
       form.addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const rawOptica = document.getElementById("opticaName").value;
-        const normalizedOptica = rawOptica.trim().toUpperCase();
-        const phone = document.getElementById("phoneNumber").value;
-        const nit = document.getElementById("nit").value || "Sin NIT";
+        const opticaInput = document.getElementById("opticaName");
+        const phoneInput = document.getElementById("phoneNumber");
+        const rawOptica = opticaInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const nit = document.getElementById("nit").value.trim() || "Sin NIT";
+
+        const regAlert = document.getElementById("regAlert");
+        if (regAlert) regAlert.style.display = "none";
+
+        if (!rawOptica) {
+          if (regAlert) {
+            regAlert.textContent = "Por favor ingrese el nombre de su óptica.";
+            regAlert.style.display = "block";
+          }
+          opticaInput.focus();
+          return;
+        }
+
+        if (!phone || !/^[0-9]{8}$/.test(phone)) {
+          if (regAlert) {
+            regAlert.textContent = "Por favor ingrese un número de celular boliviano válido de 8 dígitos.";
+            regAlert.style.display = "block";
+          }
+          phoneInput.focus();
+          return;
+        }
+
+        const normalizedOptica = rawOptica.toUpperCase();
         const now = new Date().toLocaleString();
 
         const clientData = {
@@ -172,9 +534,14 @@
           nit: nit,
         };
 
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `<span>Ingresando al catálogo...</span> <i class="fas fa-spinner fa-spin"></i>`;
+        }
+
         localStorage.setItem("registeredClient", JSON.stringify(clientData));
 
-        // 1. Background REGISTRATION log (Netlify Form: registros)
+        // 1. Netlify Form: registros
         const regData = new FormData();
         regData.append("form-name", "registros");
         regData.append("optica", normalizedOptica);
@@ -186,9 +553,9 @@
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams(regData).toString(),
-        }).catch((err) => console.error("Registration log failed", err));
+        }).catch((err) => console.error("Registration log error:", err));
 
-        // 2. Background VISIT log (Netlify Form: visitas)
+        // 2. Netlify Form: visitas
         const visitData = new FormData();
         visitData.append("form-name", "visitas");
         visitData.append("optica", normalizedOptica);
@@ -198,11 +565,11 @@
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams(visitData).toString(),
-        }).catch((err) => console.error("Initial visit log failed", err));
+        }).catch((err) => console.error("Visit log error:", err));
 
         setTimeout(() => {
           window.location.href = "index.html";
-        }, 800);
+        }, 500);
       });
     </script>
   </body>

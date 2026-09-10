@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 230">
+<defs>
+<linearGradient id="outerRed" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#E50920"/>
+<stop offset="1" stop-color="#7d0000"/>
+</linearGradient>
+<linearGradient id="sclera" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#ffffff"/>
+<stop offset="1" stop-color="#d8d8d8"/>
+</linearGradient>
+<radialGradient id="iris" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="#ff6b6b"/>
+<stop offset="35%" stop-color="#E50920"/>
+<stop offset="75%" stop-color="#830000"/>
+<stop offset="100%" stop-color="#220000"/>
+</radialGradient>
+<filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+<feGaussianBlur stdDeviation="2.2" result="b"/>
+<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+</defs>
+
+<g transform="translate(25,15)">
+<path d="M20 95 C75 18,205 18,260 95 C205 172,75 172,20 95Z"
+fill="none" stroke="url(#outerRed)" stroke-width="10" filter="url(#glow)"/>
+
+<path d="M32 95 C82 34,198 34,248 95 C198 156,82 156,32 95Z"
+fill="url(#sclera)" stroke="#222" stroke-width="2"/>
+
+<circle cx="140" cy="95" r="50" fill="url(#iris)" stroke="#3a0000" stroke-width="3"/>
+
+<!-- iris texture -->
+<g stroke="#ff8d8d" stroke-width="1.2" opacity=".45">
+<line x1="158.0" y1="95.0" x2="186.0" y2="95.0"/>
+<line x1="157.6" y1="98.7" x2="185.0" y2="104.6"/>
+<line x1="156.4" y1="102.3" x2="182.0" y2="113.7"/>
+<line x1="154.6" y1="105.6" x2="177.2" y2="122.0"/>
+<line x1="152.0" y1="108.4" x2="170.8" y2="129.2"/>
+<line x1="149.0" y1="110.6" x2="163.0" y2="134.8"/>
+<line x1="145.6" y1="112.1" x2="154.2" y2="138.7"/>
+<line x1="141.9" y1="112.9" x2="144.8" y2="140.7"/>
+<line x1="138.1" y1="112.9" x2="135.2" y2="140.7"/>
+<line x1="134.4" y1="112.1" x2="125.8" y2="138.7"/>
+<line x1="131.0" y1="110.6" x2="117.0" y2="134.8"/>
+<line x1="128.0" y1="108.4" x2="109.2" y2="129.2"/>
+<line x1="125.4" y1="105.6" x2="102.8" y2="122.0"/>
+<line x1="123.6" y1="102.3" x2="98.0" y2="113.7"/>
+<line x1="122.4" y1="98.7" x2="95.0" y2="104.6"/>
+<line x1="122.0" y1="95.0" x2="94.0" y2="95.0"/>
+<line x1="122.4" y1="91.3" x2="95.0" y2="85.4"/>
+<line x1="123.6" y1="87.7" x2="98.0" y2="76.3"/>
+<line x1="125.4" y1="84.4" x2="102.8" y2="68.0"/>
+<line x1="128.0" y1="81.6" x2="109.2" y2="60.8"/>
+<line x1="131.0" y1="79.4" x2="117.0" y2="55.2"/>
+<line x1="134.4" y1="77.9" x2="125.8" y2="51.3"/>
+<line x1="138.1" y1="77.1" x2="135.2" y2="49.3"/>
+<line x1="141.9" y1="77.1" x2="144.8" y2="49.3"/>
+<line x1="145.6" y1="77.9" x2="154.2" y2="51.3"/>
+<line x1="149.0" y1="79.4" x2="163.0" y2="55.2"/>
+<line x1="152.0" y1="81.6" x2="170.8" y2="60.8"/>
+<line x1="154.6" y1="84.4" x2="177.2" y2="68.0"/>
+<line x1="156.4" y1="87.7" x2="182.0" y2="76.3"/>
+<line x1="157.6" y1="91.3" x2="185.0" y2="85.4"/>
+</g>
+<circle cx="140" cy="95" r="18" fill="#000"/>
+<circle cx="124" cy="78" r="10" fill="#fff" opacity=".95"/>
+<ellipse cx="152" cy="110" rx="36" ry="14" fill="#fff" opacity=".08"/>
+
+<path d="M20 95 C75 18,205 18,260 95" fill="none" stroke="#550000" stroke-width="2" opacity=".7"/>
+<path d="M20 95 C75 172,205 172,260 95" fill="none" stroke="#550000" stroke-width="2" opacity=".7"/>
+</g>
+
+<g font-family="Arial,Helvetica,sans-serif">
+<text x="315" y="110" font-size="64" font-style="italic" font-weight="800" fill="#F2F4F7">OPTIMARKET</text>
+<text x="775" y="110" font-size="64" font-weight="800" fill="#E50920">S.R.L.</text>
+<text x="318" y="153" font-size="22" font-weight="700" letter-spacing="2.2" fill="#A7AFBA">LABORATORIO &amp; DISTRIBUIDORA DE ÓPTICA</text>
+</g>
+</svg>
