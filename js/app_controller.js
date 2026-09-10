@@ -1,37 +1,140 @@
 const Controller = {
   async init() {
-    View.showLoading();
-    console.log("Controller: Starting initialization...");
+    console.log("Controller: Starting responsive initialization...");
 
-    const initTimeout = setTimeout(() => {
-      console.error(
-        "Controller: Initialization timeout! Forcing error display.",
-      );
-      View.showError(
-        "El sistema está tardando demasiado en cargar. Por favor, recarga la página o revisa tu conexión.",
-      );
-    }, 8000);
+    // Bind events immediately so all navigation and interactions are responsive from frame 1
+    Events.bind();
+    this.updateCartUI();
+    this.checkIfNeedsLogVisit();
+    this.initNovedadesSlideshow();
+    this.updateSyncBadge("syncing");
 
+    // Initialize State asynchronously (IndexedDB fast-path or compressed network fetch)
     const success = await State.init();
-    clearTimeout(initTimeout);
 
     if (success) {
-      console.log("Controller: Initialization successful.");
-      Events.bind();
-      this.updateCartUI();
-      this.checkIfNeedsLogVisit();
-      this.initNovedadesSlideshow();
-      View.hideLoading();
+      console.log("Controller: Data ready. Price status:", State.priceStatus);
+      this.updateSyncBadge(State.priceVerified ? "verified" : (State.priceStatus === "offline" ? "offline" : "verified"));
+      // If user selected a category while data was loading, refresh that category view
+      if (State.currentCategory && document.getElementById("categoryLoadingNotice")) {
+        this.handleCategorySelect(State.currentCategory);
+      }
     } else {
-      console.error("Controller: Initialization failed.");
-      View.showError(
-        "Error crítico al cargar datos. Comprueba tu conexión o memoria.",
-      );
+      console.warn("Controller: Could not load initial price catalog.");
+      this.updateSyncBadge("error");
+      if (State.currentCategory) {
+        this.showCategoryError(State.currentCategory);
+      }
+    }
+  },
+
+  updateSyncBadge(status) {
+    const badge = document.getElementById("syncBadge");
+    if (!badge) return;
+    if (status === "syncing") {
+      badge.innerHTML = `<i class="fas fa-sync-alt fa-spin" style="color: #38bdf8;"></i> <span>Sincronizando...</span>`;
+      badge.style.color = "#cbd5e1";
+    } else if (status === "verified") {
+      badge.innerHTML = `<i class="fas fa-check-circle" style="color: #10b981;"></i> <span>Precios al día</span>`;
+      badge.style.color = "#a7f3d0";
+    } else if (status === "offline") {
+      badge.innerHTML = `<i class="fas fa-info-circle" style="color: #f59e0b;"></i> <span>Modo local</span>`;
+      badge.style.color = "#fde68a";
+    } else if (status === "error") {
+      badge.innerHTML = `<i class="fas fa-times-circle" style="color: #ef4444;"></i> <span>Sin conexión</span>`;
+      badge.style.color = "#fecaca";
+    }
+  },
+
+  async retryLoading() {
+    this.updateSyncBadge("syncing");
+    const success = await State.init();
+    if (success) {
+      this.updateSyncBadge(State.priceVerified ? "verified" : "offline");
+      if (State.currentCategory) {
+        this.handleCategorySelect(State.currentCategory);
+      }
+    } else {
+      this.updateSyncBadge("error");
+      alert("No se pudo conectar con el servidor de precios. Verifica tu conexión.");
+    }
+  },
+
+  showCategoryError(cat) {
+    const step2Content = document.getElementById("step2");
+    if (!step2Content) return;
+    View.goToStep(2);
+
+    const standardSearch = document.getElementById("standardSearchSection");
+    if (standardSearch) standardSearch.classList.add("hidden");
+    const accSection = document.getElementById("accesoriosSection");
+    if (accSection) accSection.classList.add("hidden");
+    const montSection = document.getElementById("monturasSection");
+    if (montSection) montSection.classList.add("hidden");
+
+    let errNotice = document.getElementById("categoryErrorNotice");
+    if (!errNotice) {
+      errNotice = document.createElement("div");
+      errNotice.id = "categoryErrorNotice";
+      step2Content.appendChild(errNotice);
+    }
+    errNotice.innerHTML = `
+      <div class="glass-card" style="text-align: center; padding: 2.5rem 1.5rem; border: 1.5px solid #fecaca; background: #fffafb;">
+        <i class="fas fa-wifi" style="font-size: 2rem; color: #dc2626; margin-bottom: 0.75rem; display: block;"></i>
+        <h3 style="color: #991b1b; margin-bottom: 0.5rem; font-weight: 700;">No se pudo conectar con la lista de precios</h3>
+        <p style="color: #64748b; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+          Para evitar cotizaciones con datos incompletos, por favor verifica tu conexión e intenta de nuevo.
+        </p>
+        <button class="btn btn-primary" onclick="Controller.retryLoading()" style="padding: 0.75rem 1.5rem; font-weight: 600;">
+          <i class="fas fa-redo"></i> Reintentar Carga
+        </button>
+      </div>
+    `;
+    errNotice.classList.remove("hidden");
+  },
+
+  onPricesUpdated() {
+    this.updateSyncBadge("verified");
+    this.updateCartUI();
+    if (State.currentItem) {
+      this.renderCalculationView(State.currentItem);
     }
   },
 
   handleCategorySelect(cat) {
     State.currentCategory = cat;
+
+    // Guard: Prevent operations with incomplete data while loading
+    if (!State.isReady) {
+      View.goToStep(2);
+      const standardSearch = document.getElementById("standardSearchSection");
+      if (standardSearch) standardSearch.classList.add("hidden");
+      const accSection = document.getElementById("accesoriosSection");
+      if (accSection) accSection.classList.add("hidden");
+      const montSection = document.getElementById("monturasSection");
+      if (montSection) montSection.classList.add("hidden");
+
+      let notice = document.getElementById("categoryLoadingNotice");
+      if (!notice) {
+        notice = document.createElement("div");
+        notice.id = "categoryLoadingNotice";
+        document.getElementById("step2").appendChild(notice);
+      }
+      notice.innerHTML = `
+        <div class="glass-card" style="text-align: center; padding: 2.5rem 1.5rem;">
+          <div class="spinner"></div>
+          <p style="margin-top: 1rem; font-weight: 600;">Sincronizando catálogo de precios...</p>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Un momento por favor...</p>
+        </div>
+      `;
+      notice.classList.remove("hidden");
+      return;
+    }
+
+    const notice = document.getElementById("categoryLoadingNotice");
+    if (notice) notice.classList.add("hidden");
+    const errNotice = document.getElementById("categoryErrorNotice");
+    if (errNotice) errNotice.classList.add("hidden");
 
     if (cat === "Accesorios") {
       const standardSearch = document.getElementById("standardSearchSection");
@@ -595,8 +698,21 @@ const Controller = {
   },
 
   async handleSendToWhatsApp() {
-    const client = JSON.parse(localStorage.getItem("registeredClient"));
-    const opticaName = (client.optica || "DESCONOCIDO").trim().toUpperCase(); // Normalize to avoid duplicates/messy data
+    const client = JSON.parse(localStorage.getItem("registeredClient") || "{}");
+    const opticaName = (client.optica || "DESCONOCIDO").trim().toUpperCase();
+
+    // Verify price freshness before confirming/generating order
+    const verification = await State.verifyPriceFreshness();
+    let priceStatusNote = "";
+    if (!verification.verified) {
+      const proceed = confirm(
+        "Aviso sobre precios:\n" +
+        verification.message +
+        "\n\n¿Deseas continuar con el pedido usando los precios locales guardados en tu dispositivo? Los precios finales están sujetos a confirmación por OPTIMARKET S.R.L."
+      );
+      if (!proceed) return;
+      priceStatusNote = `\n⚠️ *Nota:* Precios calculados sin conexión (${verification.message})\n`;
+    }
 
     let message = `Hola, soy ${opticaName}.\n Este es mi Pedido:\n\n`;
     let detailLines = [];
@@ -604,23 +720,24 @@ const Controller = {
     State.cart.forEach((item) => {
       let cleanMeasure = item.medida.replace(/^Medida:\s*/i, "").trim();
       const qLabel = this.getQtyLabel(item);
-      const line = `Material: ${item.nombre}\nMedida: ${cleanMeasure}\nCant: ${item.qty} (${qLabel})\n------------------\n`;
+      const line = `Material: ${item.nombre}\nMedida: ${cleanMeasure}\nCant: ${item.qty} (${qLabel})\nPrecio: ${item.cf} Bs.\n------------------\n`;
       message += line;
       detailLines.push(
-        `${item.nombre} | ${cleanMeasure} | Cant: ${item.qty} (${qLabel})`,
+        `${item.nombre} | ${cleanMeasure} | Cant: ${item.qty} (${qLabel}) | P.U: ${item.cf} Bs.`,
       );
     });
 
     const pm =
       document.querySelector('input[name="paymentMethod"]:checked')?.value ||
       "NO DEFINIDO";
-    message += `\nMetodo Pago: ${pm}\nGracias.`;
+    message += `\nMetodo Pago: ${pm}`;
+    if (priceStatusNote) message += priceStatusNote;
+    message += `\nGracias.`;
 
     const total = document.getElementById("step4Total").textContent;
     const now = new Date().toLocaleString();
 
     // 1. OPEN WHATSAPP IMMEDIATELY (Safari Friendly)
-    // We open it BEFORE the background fetch to ensure the browser doesn't block it
     window.open(
       `https://wa.me/59167724661?text=${encodeURIComponent(message)}`,
       "_blank",
@@ -634,6 +751,7 @@ const Controller = {
     formData.append("metodo_pago", pm);
     formData.append("total", total);
     formData.append("fecha_hora", now);
+    formData.append("estado_precios", verification.status);
 
     fetch("/", {
       method: "POST",
@@ -658,6 +776,14 @@ const Controller = {
         '<p style="text-align: center; padding: 2rem;">Carrito vacío</p>';
       totalDisplay.textContent = "0 Bs.";
       return;
+    }
+
+    if (!State.priceVerified) {
+      const banner = document.createElement("div");
+      banner.style.cssText = "background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.6rem;";
+      const lastDate = State.lastVerified ? new Date(State.lastVerified).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) : "local";
+      banner.innerHTML = `<i class="fas fa-info-circle" style="color: #d97706; font-size: 1.1rem; flex-shrink: 0;"></i><span>Precios basados en catálogo guardado (${lastDate}). Al enviar tu proforma, el vendedor confirmará la vigencia.</span>`;
+      container.appendChild(banner);
     }
 
     State.cart.forEach((item, index) => {

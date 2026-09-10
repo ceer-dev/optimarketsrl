@@ -1,0 +1,10 @@
+{
+  "name": "optimarketsrl",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Optimarket SRL - Catálogo Digital y Sistema de Cotizaciones",
+  "scripts": {
+    "test": "node --check js/*.js app.js && python scripts/validate_catalog.py",
+    "validate:prices": "python scripts/validate_catalog.py"
+  }
+}

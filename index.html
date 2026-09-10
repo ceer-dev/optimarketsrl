@@ -3,12 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OPTIMARKET</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>OPTIMARKET - Catálogo y Cotizador</title>
+    <meta name="description" content="Plataforma de consulta de listas de precios y pedidos de OPTIMARKET S.R.L. para ópticas." />
+
+    <!-- Google Fonts Preconnect & Optimized Load (Eliminates @import render blocking) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+    />
+
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="style.css?v=20260910" />
+
+    <!-- Non-blocking FontAwesome for Instant First Paint -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      />
+    </noscript>
+
     <link
       rel="icon"
       type="image/svg+xml"
@@ -23,9 +46,9 @@
       <input type="text" name="fecha_hora" />
     </form>
 
-    <div id="loadingOverlay">
+    <div id="loadingOverlay" style="display: none; opacity: 0;">
       <div class="spinner"></div>
-      <p style="margin-top: 1rem; font-weight: 500">Cargando ...</p>
+      <p id="loadingOverlayText" style="margin-top: 1rem; font-weight: 500">Cargando ...</p>
     </div>
 
     <!-- Brand Header Bar -->
@@ -43,6 +66,25 @@
         </div>
         <!-- Right side actions -->
         <div class="site-header-actions">
+          <span
+            id="syncBadge"
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 0.35rem;
+              font-size: 0.75rem;
+              font-weight: 600;
+              padding: 0.25rem 0.55rem;
+              border-radius: 20px;
+              background: rgba(255, 255, 255, 0.1);
+              color: #cbd5e1;
+              border: 1px solid rgba(255, 255, 255, 0.15);
+              white-space: nowrap;
+            "
+            title="Estado de lista de precios"
+          >
+            <i class="fas fa-sync-alt fa-spin" style="color: #38bdf8;"></i> <span>Conectando...</span>
+          </span>
           <p
             id="welcomeMessage"
             style="
@@ -962,14 +1004,19 @@
       </div>
     </div>
 
-    <script src="js/montura_images.js?v=2"></script>
-    <script src="js/product_images.js?v=2"></script>
-    <script src="js/data.js?v=2"></script>
-    <script src="js/accesorios.js?v=2"></script>
-    <script src="js/state.js?v=2"></script>
-    <script src="js/view.js?v=2"></script>
-    <script src="js/events.js?v=2"></script>
-    <script src="js/app_controller.js?v=2"></script>
-    <script src="app.js?v=2"></script>
+    <!-- Fallback for local double-clicking without a web server (file:/// protocol) -->
+    <script>
+      if (window.location.protocol === "file:") {
+        document.write('<script src="js/data.js"><\/script>');
+      }
+    </script>
+    <script src="js/montura_images.js?v=20260910"></script>
+    <script src="js/product_images.js?v=20260910"></script>
+    <script src="js/accesorios.js?v=20260910"></script>
+    <script src="js/state.js?v=20260910"></script>
+    <script src="js/view.js?v=20260910"></script>
+    <script src="js/events.js?v=20260910"></script>
+    <script src="js/app_controller.js?v=20260910"></script>
+    <script src="app.js?v=20260910"></script>
   </body>
 </html>

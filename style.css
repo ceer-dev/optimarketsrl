@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap");
-
 :root {
   /* OPTIMARKET Brand Palette — Optical Distributor */
   --primary: #cc0000;
@@ -11,38 +9,40 @@
   --secondary: #1a1f2e;
   --accent: #cc0000;
 
-  --bg-body: #f2f4f7;
+  --bg-body: #f4f6f9;
   --bg-card: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-glass: rgba(255, 255, 255, 0.92);
   --bg-header: #000000;
-  --border-glass: #e0e6ed;
-  --border-card: #dde3ea;
+  --border-glass: #e2e8f0;
+  --border-card: #e2e8f0;
 
   --text-main: #1a1f2e;
   --text-muted: #5a6478;
   --text-light: #94a3b8;
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.06);
-  --shadow-brand: 0 4px 16px rgba(204, 0, 0, 0.25);
+  /* Streamlined shadows (reduced GPU fill cost on mobile) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-brand: 0 4px 12px rgba(204, 0, 0, 0.2);
 
-  --glass-blur: 16px;
+  /* Performance-tuned blur: 6px is much lighter on mobile GPUs than 16px */
+  --glass-blur: 6px;
   --radius: 14px;
   --radius-sm: 8px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: all 0.2s ease-out;
 }
 
 [data-theme="dark"] {
   --bg-body: #020617;
-  --bg-card: rgba(30, 41, 59, 0.7);
-  --bg-glass: rgba(15, 23, 42, 0.4);
+  --bg-card: rgba(30, 41, 59, 0.9);
+  --bg-glass: rgba(15, 23, 42, 0.7);
   --border-glass: rgba(255, 255, 255, 0.1);
 
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -52,14 +52,10 @@
 }
 
 body {
-  font-family: "Outfit", sans-serif;
+  font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-body);
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(204,0,0,0.04) 0%, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(138,155,174,0.07) 0%, transparent 55%);
   color: var(--text-main);
   line-height: 1.6;
-  transition: background-color 0.5s ease;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1499,11 +1495,6 @@ h1, h2, h3 {
   }
 }
 
-/* Transitory Guard & Step Transitions */
-body {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
 .hidden {
   display: none !important;
 }
@@ -1747,6 +1738,15 @@ body {
     bottom: 50px;
     left: 0;
     width: 270px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

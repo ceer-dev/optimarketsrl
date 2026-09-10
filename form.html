@@ -3,32 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OPTIMARKET</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>OPTIMARKET - Identificación de Óptica</title>
+    <meta name="description" content="Ingreso y registro comercial para ópticas en la plataforma de OPTIMARKET S.R.L." />
+
+    <!-- Google Fonts Preconnect & Optimized Load -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+    />
+
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="style.css?v=20260910" />
+
+    <!-- Non-blocking FontAwesome -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      />
+    </noscript>
+
     <link
       rel="icon"
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%23dc2626'/%3E%3Cpath fill='white' d='M256 144c-98.7 0-189.1 55-237.9 144 48.8 89 139.3 144 237.9 144s189.1-55 237.9-144c-48.8-89-139.3-144-237.9-144zm0 240c-53 0-96-43-96-96s43-96 96-96s96 43 96 96s-43 96-96 96zm0-160c-35.3 0-64 28.7-64 64s28.7 64 64 64s64-28.7 64-64s-28.7-64-64-64z'/%3E%3C/svg%3E"
     />
-    <style>
-      body {
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-    </style>
     <script>
-      // Auth Check
+      // Auth Check: fast redirect without artificial blank page
       if (localStorage.getItem("registeredClient")) {
+        document.documentElement.style.display = "none";
         window.location.href = "index.html";
-      } else {
-        document.documentElement.style.display = "block";
-        document.addEventListener("DOMContentLoaded", () => {
-          document.body.style.opacity = "1";
-        });
       }
     </script>
   </head>

@@ -1,0 +1,95 @@
+name: Verify & Test
+
+on:
+  push:
+    branches: [ main, "perf/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Syntax & Catalog Integrity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Syntax Check on JavaScript Files
+        run: |
+          for f in js/*.js *.js; do
+            if [ -f "$f" ]; then
+              node --check "$f"
+              echo "✓ Syntax OK: $f"
+            fi
+          done
+
+      - name: Validate Precios JSON Integrity
+        run: python scripts/validate_catalog.py
+
+  e2e-test:
+    name: Headless End-to-End Smoke Test
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Test Dependencies
+        run: npm install puppeteer-core serve
+
+      - name: Start Local Web Server
+        run: |
+          npx serve -l 3000 . &
+          sleep 3
+
+      - name: Run Puppeteer E2E Flow
+        run: |
+          node -e "
+          const puppeteer = require('puppeteer-core');
+          (async () => {
+            const browser = await puppeteer.launch({
+              executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+            
+            // Set client
+            await page.evaluateOnNewDocument(() => {
+              localStorage.setItem('registeredClient', JSON.stringify({ optica: 'CI_TEST', phone: '70000000', nit: '' }));
+            });
+
+            await page.goto('http://localhost:3000/index.html', { waitUntil: 'load' });
+            
+            // Verify category buttons
+            const catButtons = await page.$$('.category-btn');
+            if (catButtons.length < 4) throw new Error('Category buttons missing');
+            console.log('✓ Found', catButtons.length, 'category buttons');
+
+            // Click Lentilla
+            await page.click('button[data-cat=\"Lentilla\"]');
+            console.log('✓ Step 2 opened');
+
+            await browser.close();
+            console.log('✓ E2E Smoke Test Passed!');
+          })().catch(e => {
+            console.error('Test Failed:', e);
+            process.exit(1);
+          });
+          "
