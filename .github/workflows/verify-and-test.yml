@@ -51,45 +51,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Test Dependencies
-        run: npm install puppeteer-core serve
+      - name: Install Puppeteer
+        run: npm install puppeteer
 
-      - name: Start Local Web Server
-        run: |
-          npx serve -l 3000 . &
-          sleep 3
-
-      - name: Run Puppeteer E2E Flow
-        run: |
-          node -e "
-          const puppeteer = require('puppeteer-core');
-          (async () => {
-            const browser = await puppeteer.launch({
-              executablePath: process.env.CHROME_BIN || '/usr/bin/google-chrome',
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
-            });
-            const page = await browser.newPage();
-            
-            // Set client
-            await page.evaluateOnNewDocument(() => {
-              localStorage.setItem('registeredClient', JSON.stringify({ optica: 'CI_TEST', phone: '70000000', nit: '' }));
-            });
-
-            await page.goto('http://localhost:3000/index.html', { waitUntil: 'load' });
-            
-            // Verify category buttons
-            const catButtons = await page.$$('.category-btn');
-            if (catButtons.length < 4) throw new Error('Category buttons missing');
-            console.log('✓ Found', catButtons.length, 'category buttons');
-
-            // Click Lentilla
-            await page.click('button[data-cat=\"Lentilla\"]');
-            console.log('✓ Step 2 opened');
-
-            await browser.close();
-            console.log('✓ E2E Smoke Test Passed!');
-          })().catch(e => {
-            console.error('Test Failed:', e);
-            process.exit(1);
-          });
-          "
+      - name: Run End-to-End Smoke Test
+        run: node scripts/smoke_test.js
