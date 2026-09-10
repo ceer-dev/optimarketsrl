@@ -332,7 +332,9 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 1.5rem;
+                margin-bottom: 1.25rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
               "
             >
               <button
@@ -340,8 +342,28 @@
                 onclick="View.goToStep(1)"
                 style="padding: 0.5rem 1rem"
               >
-                <i class="fas fa-arrow-left"></i> Volver
+                <i class="fas fa-arrow-left"></i> Inicio
               </button>
+
+              <div style="display: flex; gap: 0.4rem; align-items: center">
+                <button
+                  id="viewToggleCatalog"
+                  class="btn glass active"
+                  onclick="Controller.setStep2View('catalog')"
+                  style="padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 700; border-radius: 8px"
+                >
+                  <i class="fas fa-th-large"></i> Catálogo
+                </button>
+                <button
+                  id="viewToggleSearch"
+                  class="btn glass"
+                  onclick="Controller.setStep2View('search')"
+                  style="padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 700; border-radius: 8px"
+                >
+                  <i class="fas fa-search"></i> Búsqueda Rápida
+                </button>
+              </div>
+
               <label
                 class="glass"
                 style="
@@ -368,7 +390,73 @@
               </label>
             </div>
 
-            <div id="standardSearchSection">
+            <!-- Visual Catalog Section (Primary View) -->
+            <div id="catalogVisualSection">
+              <div class="catalog-main-layout" id="catalogMainSection">
+                <!-- Columna Lateral de Categorías (Escritorio) -->
+                <aside class="catalog-sidebar-col">
+                  <nav class="catalog-side-nav" id="catalogSideCategories">
+                    <!-- Injected by CatalogView.renderCategoryNav() -->
+                  </nav>
+                </aside>
+
+                <!-- Columna Central de Contenido y Productos -->
+                <div class="catalog-content-col">
+                  <!-- Píldoras de Categorías en Móvil -->
+                  <div class="catalog-mobile-categories" id="catalogMobileCategories">
+                    <!-- Injected by CatalogView.renderCategoryNav() -->
+                  </div>
+
+                  <!-- Barra de Búsqueda Rápida del Catálogo -->
+                  <div class="catalog-search-bar">
+                    <i class="fas fa-search catalog-search-icon"></i>
+                    <input
+                      type="text"
+                      id="catalogSearchInput"
+                      class="catalog-search-input"
+                      placeholder="Buscar material o código (ej: Blanco, Blue Block, 8057)..."
+                      autocomplete="off"
+                    />
+                  </div>
+
+                  <!-- Encabezado de la Cuadrícula -->
+                  <div class="catalog-grid-header">
+                    <h3 class="catalog-grid-title" id="catalogCategoryTitle">Catálogo de Productos</h3>
+                    <span class="catalog-results-count" id="catalogResultsCount">0 productos</span>
+                  </div>
+
+                  <!-- Cuadrícula de Tarjetas de Productos -->
+                  <div class="catalog-products-grid" id="catalogProductsGrid">
+                    <!-- Injected by CatalogView.renderCatalogGrid() -->
+                  </div>
+                </div>
+
+                <!-- Columna Lateral de Proforma (Escritorio) -->
+                <aside class="catalog-proforma-col" id="catalogProformaSidebar">
+                  <div class="catalog-proforma-card">
+                    <div class="catalog-proforma-header">
+                      <span class="catalog-proforma-title"><i class="fas fa-shopping-cart"></i> Proforma (<span id="catalogProformaCount">0</span>)</span>
+                      <button type="button" class="catalog-proforma-clear" onclick="CatalogView.clearProforma()" title="Vaciar proforma">Vaciar</button>
+                    </div>
+                    <div class="catalog-proforma-items" id="catalogProformaItems">
+                      <!-- Injected by CatalogView.renderProformaSidebar() -->
+                    </div>
+                    <div class="catalog-proforma-footer">
+                      <div class="catalog-proforma-total-row">
+                        <span class="catalog-proforma-total-label">Total:</span>
+                        <strong class="catalog-proforma-total-val" id="catalogProformaTotal">0.00 Bs.</strong>
+                      </div>
+                      <button type="button" class="catalog-btn-whatsapp" onclick="Controller.handleViewCart()">
+                        <i class="fab fa-whatsapp"></i> Finalizar Pedido
+                      </button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </div>
+
+            <!-- Standard Classic Search Section (Hidden by default, can be toggled) -->
+            <div id="standardSearchSection" class="hidden">
               <div
                 id="searchAidSection"
                 class="hidden"
@@ -654,6 +742,24 @@
       <input type="text" name="nit" />
       <input type="text" name="fecha_hora" />
     </form>
+
+    <!-- Barra Flotante de Proforma para Móvil -->
+    <div class="catalog-mobile-bar" id="catalogMobileBar">
+      <div class="catalog-mobile-bar-info">
+        <span class="catalog-mobile-bar-count"><span id="catalogMobileBarCount">0</span> items</span>
+        <span class="catalog-mobile-bar-total" id="catalogMobileBarTotal">0.00 Bs.</span>
+      </div>
+      <button type="button" class="catalog-mobile-bar-btn" onclick="Controller.handleViewCart()">
+        <i class="fas fa-shopping-cart"></i> Ver Proforma
+      </button>
+    </div>
+
+    <!-- Modal / Dock de Selección de Graduaciones (OD / OI) -->
+    <div id="catalogSelectionModal" class="catalog-modal-overlay hidden" onclick="if(event.target === this) CatalogView.closeSelectionModal()">
+      <div class="csm-container" id="catalogSelectionContent">
+        <!-- Inyectado dinámicamente por CatalogView.renderSelectionContent() -->
+      </div>
+    </div>
 
     <!-- Image Modal -->
     <div id="imageModal" class="hidden modal-backdrop" style="z-index: 3000">
@@ -1009,6 +1115,8 @@
         document.write('<script src="js/data.js"><\/script>');
       }
     </script>
+    <script src="js/image_service.js?v=20260910"></script>
+    <script src="js/catalog_view.js?v=20260910"></script>
     <script src="js/montura_images.js?v=20260910"></script>
     <script src="js/product_images.js?v=20260910"></script>
     <script src="js/accesorios.js?v=20260910"></script>

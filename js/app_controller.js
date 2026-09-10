@@ -15,6 +15,9 @@ const Controller = {
     if (success) {
       console.log("Controller: Data ready. Price status:", State.priceStatus);
       this.updateSyncBadge(State.priceVerified ? "verified" : (State.priceStatus === "offline" ? "offline" : "verified"));
+      if (window.CatalogView && typeof CatalogView.init === "function") {
+        CatalogView.init();
+      }
       // If user selected a category while data was loading, refresh that category view
       if (State.currentCategory && document.getElementById("categoryLoadingNotice")) {
         this.handleCategorySelect(State.currentCategory);
@@ -136,58 +139,40 @@ const Controller = {
     const errNotice = document.getElementById("categoryErrorNotice");
     if (errNotice) errNotice.classList.add("hidden");
 
-    if (cat === "Accesorios") {
-      const standardSearch = document.getElementById("standardSearchSection");
-      if (standardSearch) standardSearch.classList.add("hidden");
-      const accSection = document.getElementById("accesoriosSection");
-      if (accSection) accSection.classList.remove("hidden");
-      const montSection = document.getElementById("monturasSection");
-      if (montSection) montSection.classList.add("hidden");
-      const kmToggle = document.getElementById("keepMaterialToggle");
-      if (kmToggle) kmToggle.parentElement.classList.add("hidden");
+    State.currentCategory = cat;
 
+    if (window.CatalogView) {
+      CatalogView.setCategory(cat);
+      this.setStep2View("catalog");
+    }
+
+    if (cat === "Accesorios") {
       this.loadAndRenderAccesorios();
       View.goToStep(2);
       return;
     }
 
     if (cat === "Montura") {
-      const standardSearch = document.getElementById("standardSearchSection");
-      if (standardSearch) standardSearch.classList.add("hidden");
-      const accSection = document.getElementById("accesoriosSection");
-      if (accSection) accSection.classList.add("hidden");
-      const montSection = document.getElementById("monturasSection");
-      if (montSection) montSection.classList.remove("hidden");
-      const kmToggle = document.getElementById("keepMaterialToggle");
-      if (kmToggle) kmToggle.parentElement.classList.add("hidden");
-
       this.loadAndRenderMonturas();
       View.goToStep(2);
       return;
     }
 
-    const standardSearch = document.getElementById("standardSearchSection");
-    if (standardSearch) standardSearch.classList.remove("hidden");
-    const accSection = document.getElementById("accesoriosSection");
-    if (accSection) accSection.classList.add("hidden");
-    const montSection = document.getElementById("monturasSection");
-    if (montSection) montSection.classList.add("hidden");
-    const kmToggle = document.getElementById("keepMaterialToggle");
-    if (kmToggle) kmToggle.parentElement.classList.remove("hidden");
-
     const input = document.getElementById("productInput");
-    input.value = "";
-    input.placeholder = "Escribe el material (ej: Blanco)...";
+    if (input) {
+      input.value = "";
+      input.placeholder = "Escribe el material (ej: Blanco)...";
+    }
 
-    // UI Match: Show secondary inputs immediately
+    // Prepare classic secondary inputs & aids as fallback
     View.renderSecondaryInputs(cat);
-    document.getElementById("finalSearchAction").classList.remove("hidden");
+    const fAction = document.getElementById("finalSearchAction");
+    if (fAction) fAction.classList.remove("hidden");
 
     View.renderHelpGuide(cat);
     View.renderSearchAids(cat, (term) => {
-      input.value = term;
-      // Only focus if not on mobile
-      if (!View.isMobile()) {
+      if (input) input.value = term;
+      if (!View.isMobile() && input) {
         input.focus();
       }
       this.handleSearchInput(term);
@@ -195,9 +180,34 @@ const Controller = {
 
     View.goToStep(2);
 
-    // Only focus if not on mobile
-    if (!View.isMobile()) {
+    if (!View.isMobile() && input) {
       setTimeout(() => input.focus(), 100);
+    }
+  },
+
+  setStep2View(mode) {
+    const catSection = document.getElementById("catalogVisualSection");
+    const stdSearch = document.getElementById("standardSearchSection");
+    const accSection = document.getElementById("accesoriosSection");
+    const montSection = document.getElementById("monturasSection");
+    const btnCat = document.getElementById("viewToggleCatalog");
+    const btnSearch = document.getElementById("viewToggleSearch");
+
+    if (mode === "search") {
+      if (catSection) catSection.classList.add("hidden");
+      if (stdSearch) stdSearch.classList.remove("hidden");
+      if (btnCat) btnCat.classList.remove("active");
+      if (btnSearch) btnSearch.classList.add("active");
+    } else {
+      if (catSection) catSection.classList.remove("hidden");
+      if (stdSearch) stdSearch.classList.add("hidden");
+      if (accSection) accSection.classList.add("hidden");
+      if (montSection) montSection.classList.add("hidden");
+      if (btnCat) btnCat.classList.add("active");
+      if (btnSearch) btnSearch.classList.remove("active");
+      if (window.CatalogView) {
+        CatalogView.setCategory(State.currentCategory || "Lentilla");
+      }
     }
   },
 
@@ -315,18 +325,53 @@ const Controller = {
         );
       }
     } catch (e) {
-      alert("Error en la búsqueda. Revisa los campos.");
+      console.error("handleFinalSearch Error:", e.message || e);
+      alert("Error en la búsqueda. Revisa los campos: " + (e.message || e));
     }
   },
 
   renderCalculationView(item) {
     const display = document.getElementById("priceDisplay");
 
+    // In-place update check: If view is already rendered for this exact material & category,
+    // update only the values without destroying DOM, avoiding image reloading, re-decoding and CLS!
+    const existingMainImg = document.getElementById("calcMainEnvelopeImage");
+    if (
+      existingMainImg &&
+      this._lastCalcProduct === item.nombre &&
+      this._lastCalcCategory === item.categoria
+    ) {
+      const stickyMedida = document.getElementById("calcStickyMedida");
+      if (stickyMedida) stickyMedida.textContent = item.medida;
+      const subtitleMedida = document.getElementById("calcSubtitleMedida");
+      if (subtitleMedida) subtitleMedida.textContent = item.medida;
+      const unitPriceVal = document.getElementById("calcUnitPriceVal");
+      if (unitPriceVal) unitPriceVal.textContent = `${item.cf} Bs.`;
+      const sfVal = document.getElementById("calcSfVal");
+      if (sfVal && item.sf) sfVal.textContent = `${item.sf} Bs.`;
+
+      let defaultQty = 1;
+      if (item.categoria === "Accesorios") {
+        let cat = item.parsedCategoria;
+        if (cat === "montura") defaultQty = 3;
+        if (cat === "estuche lente de contacto") defaultQty = 12;
+      } else if (item.categoria === "Montura") {
+        defaultQty = 3;
+      }
+      const qtyInput = document.getElementById("qtyInput");
+      const currentQty = qtyInput ? parseInt(qtyInput.value || defaultQty) : defaultQty;
+      this.calculateLiveTotal(currentQty);
+      return;
+    }
+
+    this._lastCalcProduct = item.nombre;
+    this._lastCalcCategory = item.categoria;
+
     // SF Box calculation logic (only if it exists)
     const sfRow = item.sf
       ? `<div class="calc-price-row">
           <span class="calc-label-text">Sin Factura (SF)</span>
-          <span class="calc-value-text">${item.sf} Bs.</span>
+          <span id="calcSfVal" class="calc-value-text">${item.sf} Bs.</span>
       </div>`
       : "";
 
@@ -344,8 +389,13 @@ const Controller = {
     const initTotal = (parseFloat(item.cf) * defaultQty).toFixed(1);
 
     let thumbnailHtml = "";
-    let envelopeImgSrcs = [];
-    if (window.productEnvelopeImages) {
+    let resolvedImg = window.ImageService ? window.ImageService.resolve(item.nombre, item.categoria) : null;
+    let envelopeGallery = (resolvedImg && Array.isArray(resolvedImg.gallery)) ? resolvedImg.gallery : [];
+    let firstSrc = resolvedImg ? resolvedImg.card : "";
+    let firstZoom = resolvedImg ? resolvedImg.zoom : "";
+
+    // Legacy fallback if ImageService doesn't match
+    if (envelopeGallery.length === 0 && window.productEnvelopeImages) {
       let entry = window.productEnvelopeImages[item.nombre];
       if (!entry) {
         const norm = (str) => (str || "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -358,28 +408,42 @@ const Controller = {
         }
       }
       if (entry) {
-        envelopeImgSrcs = Array.isArray(entry) ? entry : [entry];
+        const list = Array.isArray(entry) ? entry : [entry];
+        envelopeGallery = list.map((src, idx) => ({
+          thumb: src,
+          card: src,
+          zoom: src,
+          label: `Sobre ${idx + 1}`
+        }));
+        firstSrc = envelopeGallery[0].card;
+        firstZoom = envelopeGallery[0].zoom;
       }
     }
 
-    if (envelopeImgSrcs.length > 0) {
-      const firstSrc = envelopeImgSrcs[0];
+    if (envelopeGallery.length > 0) {
       const escapedMedida = (item.medida || "").replace(/'/g, "\\'");
       const escapedCategoria = (item.categoria || "").replace(/'/g, "\\'");
       const escapedNombre = (item.nombre || "").replace(/'/g, "\\'");
 
       let thumbnailsRowHtml = "";
-      if (envelopeImgSrcs.length > 1) {
+      if (envelopeGallery.length > 1) {
         thumbnailsRowHtml = `
-          <div class="envelope-thumbnails-container">
-            ${envelopeImgSrcs.map((src, idx) => {
-              const escapedSrc = src.replace(/'/g, "\\'");
+          <div class="envelope-thumbnails-container" style="display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
+            ${envelopeGallery.map((g, idx) => {
+              const escCard = g.card.replace(/'/g, "\\'");
+              const escZoom = g.zoom.replace(/'/g, "\\'");
               return `
                 <img 
                   class="envelope-thumbnail ${idx === 0 ? 'active' : ''}" 
-                  src="${src}" 
-                  alt="Sobre ${idx + 1}"
-                  onclick="Controller.selectEnvelopeImage(${idx}, '${escapedSrc}')"
+                  src="${g.thumb}" 
+                  alt="${g.label}"
+                  loading="lazy"
+                  decoding="async"
+                  width="48"
+                  height="48"
+                  style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px; border: 1.5px solid ${idx === 0 ? 'var(--primary)' : 'var(--border-glass)'}; cursor: pointer;"
+                  onerror="if(window.ImageService) ImageService.handleError(this)"
+                  onclick="Controller.selectEnvelopeImage(${idx}, '${escCard}', '${escZoom}')"
                 >
               `;
             }).join("")}
@@ -389,23 +453,32 @@ const Controller = {
 
       thumbnailHtml = `
           <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 280px;" onclick="Controller.handleEnvelopeMainImageClick('${escapedMedida}', '${escapedCategoria}', '${escapedNombre}')">
-              <img id="calcMainEnvelopeImage" src="${firstSrc}" style="width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 12px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 260px; aspect-ratio: 1 / 1;" onclick="Controller.handleEnvelopeMainImageClick('${escapedMedida}', '${escapedCategoria}', '${escapedNombre}')">
+              <img 
+                id="calcMainEnvelopeImage" 
+                src="${firstSrc}" 
+                data-zoom-src="${firstZoom}"
+                alt="${escapedNombre}"
+                fetchpriority="high"
+                decoding="async"
+                onerror="if(window.ImageService) ImageService.handleError(this)"
+                style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);"
+              >
               
               <!-- Sticky Measurement Overlay Sticker -->
-              <div style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); background: #ffffff; color: #000000; padding: 0.35rem 0.6rem; border-radius: 1px; border: 1.5px solid #222; box-shadow: 1px 2px 4px rgba(0,0,0,0.15); text-align: center; pointer-events: none; width: 85%; max-width: 250px; display: flex; flex-direction: column; gap: 2px;">
+              <div style="position: absolute; top: 8%; left: 50%; transform: translateX(-50%); background: #ffffff; color: #000000; padding: 0.35rem 0.6rem; border-radius: 1px; border: 1.5px solid #222; box-shadow: 1px 2px 4px rgba(0,0,0,0.15); text-align: center; pointer-events: none; width: 85%; max-width: 230px; display: flex; flex-direction: column; gap: 2px;">
                 <div style="font-size: 0.55rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1;">
                   ${item.categoria}
                 </div>
-                <div style="font-size: 0.65rem; font-weight: 800; color: #000; font-family: sans-serif; line-height: 1.15; word-wrap: break-word;">
+                <div id="calcStickyNombre" style="font-size: 0.65rem; font-weight: 800; color: #000; font-family: sans-serif; line-height: 1.15; word-wrap: break-word;">
                   ${item.nombre}
                 </div>
-                <div style="font-size: 0.7rem; font-weight: 700; font-family: 'Courier New', Courier, monospace; border-top: 1px dashed #ccc; padding-top: 2px; margin-top: 2px; word-wrap: break-word; letter-spacing: 0.2px;">
+                <div id="calcStickyMedida" style="font-size: 0.7rem; font-weight: 700; font-family: 'Courier New', Courier, monospace; border-top: 1px dashed #ccc; padding-top: 2px; margin-top: 2px; word-wrap: break-word; letter-spacing: 0.2px;">
                   ${item.medida}
                 </div>
               </div>
 
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">
+              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.3rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600;">
                  <i class="fas fa-search-plus"></i> Ampliar
               </div>
             </div>
@@ -415,9 +488,9 @@ const Controller = {
     } else if (item.categoria === "Accesorios" && item.imgSrc) {
       thumbnailHtml = `
           <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 280px;" onclick="Controller.openImageModal('${item.imgSrc}')">
-              <img src="${item.imgSrc}" style="width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 12px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">
+            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 260px; aspect-ratio: 1 / 1;" onclick="Controller.openImageModal('${item.imgSrc}')">
+              <img src="${item.imgSrc}" loading="lazy" decoding="async" onerror="if(window.ImageService) ImageService.handleError(this)" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.3rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600;">
                  <i class="fas fa-search-plus"></i> Ampliar
               </div>
             </div>
@@ -433,9 +506,9 @@ const Controller = {
       }
       thumbnailHtml = `
           <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 280px;" onclick="Controller.openImageModal('${imgSrc}')">
-              <img src="${imgSrc}" onerror="this.onerror=null; this.src='images/placeholder-frame.svg';" style="width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 12px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">
+            <div style="position: relative; cursor: pointer; display: inline-block; width: 100%; max-width: 260px; aspect-ratio: 1 / 1;" onclick="Controller.openImageModal('${imgSrc}')">
+              <img src="${imgSrc}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='images/placeholder-frame.svg';" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-glass); background: white; padding: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; padding: 0.3rem 0.55rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600;">
                  <i class="fas fa-search-plus"></i> Ampliar
               </div>
             </div>
@@ -681,6 +754,10 @@ const Controller = {
       } else {
         floatContainer.classList.add("hidden");
       }
+    }
+
+    if (window.CatalogView && typeof CatalogView.renderProformaSidebar === "function") {
+      CatalogView.renderProformaSidebar();
     }
   },
 
@@ -1405,17 +1482,24 @@ const Controller = {
     document.getElementById("imageModal").classList.remove("hidden");
   },
 
-  selectEnvelopeImage(thumbIndex, src) {
+  selectEnvelopeImage(thumbIndex, cardSrc, zoomSrc) {
     const mainImg = document.getElementById("calcMainEnvelopeImage");
     if (mainImg) {
-      mainImg.src = src;
+      if (window.ImageService) {
+        window.ImageService.updateImgSafely(mainImg, cardSrc);
+      } else {
+        mainImg.src = cardSrc;
+      }
+      if (zoomSrc) mainImg.dataset.zoomSrc = zoomSrc;
     }
     const thumbnails = document.querySelectorAll(".envelope-thumbnail");
     thumbnails.forEach((thumb, idx) => {
       if (idx === thumbIndex) {
         thumb.classList.add("active");
+        thumb.style.borderColor = "var(--primary)";
       } else {
         thumb.classList.remove("active");
+        thumb.style.borderColor = "var(--border-glass)";
       }
     });
   },
@@ -1423,7 +1507,8 @@ const Controller = {
   handleEnvelopeMainImageClick(medida, categoria, nombre) {
     const mainImg = document.getElementById("calcMainEnvelopeImage");
     if (mainImg) {
-      this.openImageModal(mainImg.src, medida, categoria, nombre);
+      const zoomSrc = mainImg.dataset.zoomSrc || mainImg.src;
+      this.openImageModal(zoomSrc, medida, categoria, nombre);
     }
   },
 
