@@ -23,7 +23,12 @@
   var CLAVE_PEDIDO = "pedidoPanel_v1";
   var LOGO = "images/optimarket_eye_logo.svg";
   var MAX_SUGERENCIAS = 8;
-  var VERSION_ARCHIVOS = "20261008j";   // igual que el ?v= de index.html
+  // Versión que está corriendo = el ?v= con que index.html cargó este archivo (no hay que mantenerla a mano)
+  var VERSION_ARCHIVOS = (function () {
+    var tag = document.querySelector('script[src*="js/panel.js"]');
+    var m = tag && /[?&]v=([^&]+)/.exec(tag.getAttribute("src"));
+    return m ? m[1] : "";
+  })();
 
   var vista = document.getElementById("vista");
   var cliente = leerJson(localStorage, "registeredClient") || {};
@@ -805,6 +810,58 @@
         body: new URLSearchParams({ "form-name": "visitas", optica: cliente.optica || "", fecha_hora: new Date().toLocaleString("es-BO") }).toString() }).catch(function () {});
     }
   } catch (_) {}
+
+  // ------------------------------------------------------------------ actualización automática
+  /*
+   * Los clientes casi nunca recargan: el celular deja la pestaña abierta días. Cuando vuelven a ella (y cada 15 min si la
+   * tienen a la vista) se compara con lo publicado en Netlify:
+   *   - index.html trae otro ?v= de panel.js  → hay una versión nueva del panel
+   *   - catalogo/indice.json tiene otra fecha → se exportó un catálogo nuevo (precios)
+   * Si cambió algo, la página se recarga sola (el pedido está guardado en el celular, no se pierde). Si el cliente está en
+   * medio de algo (ventana abierta, asistente o escribiendo), se muestra un aviso con «Actualizar» en vez de recargar.
+   */
+  var ultimaRevision = Date.now();
+  var revisando = false;
+  function hayVersionNueva() {
+    var panel = fetch("index.html?_=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.text() : ""; })
+      .then(function (html) { var m = /js\/panel\.js\?v=([^"'&\s]+)/.exec(html); return !!(m && VERSION_ARCHIVOS && m[1] !== VERSION_ARCHIVOS); });
+    var catalogo = !indice ? Promise.resolve(false) : fetch("catalogo/indice.json", { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { return !!(d && d.generado && d.generado !== indice.generado); });
+    return Promise.all([panel, catalogo]).then(function (x) { return x[0] || x[1]; });
+  }
+  function ocupado() {
+    var foco = document.activeElement;
+    return !!(document.getElementById("capaVentana") || document.body.classList.contains("con-asistente") ||
+      (foco && /^(INPUT|TEXTAREA|SELECT)$/.test(foco.tagName) && foco.value));
+  }
+  function avisoActualizar() {
+    if (document.getElementById("avisoVersion")) return;
+    var barra = document.createElement("div");
+    barra.id = "avisoVersion"; barra.className = "aviso-version"; barra.setAttribute("role", "status");
+    barra.innerHTML = "<span>Hay una versión nueva del catálogo.</span>";
+    var b = document.createElement("button"); b.type = "button"; b.className = "boton boton-rojo boton-chico"; b.textContent = "Actualizar";
+    b.addEventListener("click", function () { location.reload(); });
+    barra.appendChild(b);
+    document.body.appendChild(barra);
+  }
+  function revisarVersion() {
+    if (revisando || document.hidden || (navigator.onLine === false)) return;
+    revisando = true; ultimaRevision = Date.now();
+    hayVersionNueva().then(function (nueva) {
+      if (!nueva) return;
+      // Si ya se recargó por esto en esta visita y sigue igual (caché del celular), no insistir: solo el aviso
+      var ya = null; try { ya = sessionStorage.getItem("recargaPorVersion"); } catch (_) {}
+      if (ocupado() || ya === VERSION_ARCHIVOS + "|" + (indice && indice.generado)) { avisoActualizar(); return; }
+      try { sessionStorage.setItem("recargaPorVersion", VERSION_ARCHIVOS + "|" + (indice && indice.generado)); } catch (_) {}
+      location.reload();
+    }).catch(function () {}).then(function () { revisando = false; });
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - ultimaRevision > 60000) revisarVersion(); });
+  window.addEventListener("pageshow", function (e) { if (e.persisted) revisarVersion(); });   // volvió con «atrás» desde la caché del navegador
+  window.addEventListener("online", revisarVersion);
+  setInterval(function () { if (Date.now() - ultimaRevision >= 15 * 60000) revisarVersion(); }, 60000);
 
   rutear();
 })();
