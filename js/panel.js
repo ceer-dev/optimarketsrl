@@ -264,7 +264,7 @@
     var accion = href
       ? '<a class="boton boton-rojo boton-chico" href="' + href + '">+ Agregar</a>'
       : '<button type="button" class="boton boton-rojo boton-chico" data-agregar="' + r[0] + '" data-cat="' + esc(cat.slug) + '" data-sub="' + sub.id + '">+ Agregar</button>';
-    return '<div class="tarjeta-sub tarjeta-producto"><div class="foto">' + img(r[4] || sub.imagen, r[1]) + "</div>" +
+    return '<div class="tarjeta-sub tarjeta-producto"><div class="foto">' + img(r[4], r[1]) + "</div>" +
       '<div class="info"><span class="nombre mono">' + esc(r[1]) + "</span>" +
       (aliasDeModelo(sub, r) ? '<span class="alias">También: ' + esc(aliasDeModelo(sub, r)) + "</span>" : "") + precioTarjeta(r[2], "") +
       (q ? '<span class="elegidos">' + textoUnidad(q, null) + " en tu pedido</span>" : "") + accion + "</div></div>";
@@ -613,7 +613,7 @@
     if (!r) { location.replace(rutaProductos); return; }
     var cantidad = 1;
     var capa = abrirVentana(
-      '<header class="ventana-cabecera">' + img(r[4] || sub.imagen, r[1], "ventana-foto") +
+      '<header class="ventana-cabecera">' + img(r[4], r[1], "ventana-foto") +
       '<div class="textos"><h2 class="mono">' + esc(r[1]) + "</h2><span>" + esc(sub.nombre) + " · " + esc(cat.nombre) + "</span></div>" +
       '<button type="button" class="ventana-x" data-cerrar aria-label="Cerrar">✕</button></header>' +
       '<div class="ventana-cuerpo">' +
