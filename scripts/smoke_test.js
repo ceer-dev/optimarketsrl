@@ -64,40 +64,46 @@ async function runTest() {
   try {
     const page = await browser.newPage();
     
-    // Simulate registered client and disable novedades modal
+    // Cliente ya registrado (el panel redirige a form.html si no lo está)
     await page.evaluateOnNewDocument(() => {
       localStorage.setItem('registeredClient', JSON.stringify({
         optica: 'OPTICA_CI_TEST',
         phone: '71234567',
         nit: '123456'
       }));
-      sessionStorage.setItem('novedadesShown', 'true');
     });
 
+    const erroresPagina = [];
     page.on('console', (msg) => console.log('[PAGE]', msg.text()));
-    page.on('pageerror', (err) => console.error('[PAGE ERROR]', err));
+    page.on('pageerror', (err) => { erroresPagina.push(err); console.error('[PAGE ERROR]', err); });
 
     console.log(`Navigating to http://127.0.0.1:${PORT}/index.html ...`);
     await page.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
 
-    // Wait for categories
-    await page.waitForSelector('.category-btn', { timeout: 10000 });
-    const buttons = await page.$$('.category-btn');
-    console.log(`[OK] Found ${buttons.length} category buttons.`);
+    // 1) Categorías del catálogo (catalogo/indice.json)
+    await page.waitForSelector('.tarjeta-categoria', { timeout: 10000 });
+    const categorias = await page.$$('.tarjeta-categoria');
+    console.log(`[OK] Found ${categorias.length} categories.`);
+    if (categorias.length < 4) throw new Error(`Expected at least 4 categories, got ${categorias.length}`);
 
-    if (buttons.length < 4) {
-      throw new Error(`Expected at least 4 category buttons, got ${buttons.length}`);
-    }
+    // 2) Lentilla → subcategorías
+    await page.click('a.tarjeta-categoria[href="#/c/lentilla"]');
+    await page.waitForSelector('#grillaSub .tarjeta-sub', { timeout: 10000 });
+    console.log('[OK] Lentilla subcategories visible.');
 
-    // Verify Lentilla button is present and click it
-    await page.waitForSelector('button[data-cat="Lentilla"]', { timeout: 5000 });
-    await page.click('button[data-cat="Lentilla"]');
-    console.log('[OK] Lentilla category clicked successfully.');
+    // 3) Ventana de medida: «+2,50-0,50» (con coma) debe encontrarse y permitir agregar
+    await page.click('#grillaSub .tarjeta-sub');
+    await page.waitForSelector('#fMedida', { visible: true, timeout: 10000 });
+    await page.type('#fMedida', '+2,50-0,50');
+    await page.waitForFunction(() => !document.getElementById('btnAgregar').disabled, { timeout: 5000 });
+    console.log('[OK] Measure window resolves "+2,50-0,50" and allows adding.');
 
-    // Wait for Step 2 view to become active
-    await page.waitForSelector('#step2', { visible: true, timeout: 10000 });
-    console.log('[OK] Step 2 view is active and visible.');
+    // 4) Búsqueda global con el diccionario (config/diccionario-busqueda.json): «cr39» → Organico Blanco
+    await page.goto(`http://127.0.0.1:${PORT}/index.html#/buscar/cr39`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForFunction(() => /Organico Blanco/.test((document.getElementById('resultadosGlobal') || {}).innerText || ''), { timeout: 10000 });
+    console.log('[OK] Search dictionary resolves "cr39".');
 
+    if (erroresPagina.length) throw new Error(`Page errors: ${erroresPagina.length}`);
     console.log('[OK] All Smoke Tests Passed Successfully!');
   } finally {
     await browser.close();

@@ -3,376 +3,210 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OPTIMARKET S.R.L. — Identificación de Óptica</title>
+    <title>OPTIMARKET S.R.L. — Panel para Clientes</title>
     <meta
       name="description"
-      content="Registro e identificación comercial para ópticas en la plataforma de catálogo y pedidos de OPTIMARKET S.R.L."
+      content="Panel para Clientes de OPTIMARKET S.R.L.: catálogo, precios y pedidos para ópticas."
     />
+    <meta name="theme-color" content="#07090c" />
 
-    <!-- Favicon Oficial con alternativas SVG y PNG -->
+    <!-- Favicon (mismo logo que el sistema ERP) -->
     <link rel="icon" type="image/svg+xml" href="images/optimarket_eye_logo.svg" />
     <link rel="alternate icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="images/favicon-192x192.png" />
 
-    <!-- Google Fonts Preconnect & Optimized Load (Outfit para marca y titulares) -->
+    <!-- Tipografía del ERP: Outfit (texto) y JetBrains Mono (pie) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
     />
 
-    <!-- Local Stylesheet -->
-    <link rel="stylesheet" href="style.css?v=20260910" />
-
-    <!-- Non-blocking FontAwesome -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      />
-    </noscript>
-
+    <!--
+      PANEL PARA CLIENTES — Acceso
+      Mismo diseño que el login del sistema ERP (Optiweb: features/autenticacion/pagina/LoginPage.jsx):
+      fondo #07090c con anillos ópticos y resplandor rojo, tarjeta #0e1219, línea superior roja, logo oficial,
+      distintivo con punto pulsante y botón rojo #D90429.
+      Por ahora el cliente se identifica con su óptica y celular (el sitio es estático, sin servidor de cuentas).
+      Se guarda en localStorage «registeredClient» (lo usa js/auth_guard.js) y se registra en Netlify Forms.
+    -->
     <style>
       :root {
-        --om-primary: #d90429;
-        --om-primary-hover: #b90322;
-        --om-primary-glow: rgba(217, 4, 41, 0.28);
-        --om-bg-dark: #07090e;
-        --om-bg-surface: #0e1219;
-        --om-bg-card: rgba(14, 18, 26, 0.94);
-        --om-border: rgba(255, 255, 255, 0.08);
-        --om-text-main: #f8fafc;
-        --om-text-muted: #94a3b8;
-        --om-text-sub: #64748b;
+        --om-rojo: #d90429;
+        --om-rojo-hover: #ef233c;
+        --om-fondo: #07090c;
+        --om-tarjeta: rgba(14, 18, 25, 0.9);
+        --om-borde-tarjeta: rgba(30, 41, 59, 0.9);   /* slate-800/90 */
+        --om-input: #020617;                          /* slate-950 */
+        --om-borde-input: rgba(51, 65, 85, 0.8);      /* slate-700/80 */
+        --om-texto: #f1f5f9;                          /* slate-100 */
+        --om-label: #cbd5e1;                          /* slate-300 */
+        --om-secundario: #94a3b8;                     /* slate-400 */
+        --om-tenue: #64748b;                          /* slate-500 */
       }
 
-      body.registration-page {
-        background-color: var(--om-bg-dark);
-        color: var(--om-text-main);
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      [hidden] { display: none !important; }   /* los formularios de Netlify Forms no deben verse */
+
+      html, body { height: 100%; }
+
+      body {
         min-height: 100vh;
+        background: var(--om-fondo);
+        color: var(--om-texto);
+        font-family: 'Outfit', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 16px;
         position: relative;
         overflow-x: hidden;
-        padding: 1.5rem 1rem;
-        background-image:
-          radial-gradient(circle at 50% 50%, rgba(217, 4, 41, 0.05) 0%, transparent 60%),
-          radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 100% 100%, 32px 32px;
+        -webkit-font-smoothing: antialiased;
       }
 
-      /* Retícula y Anillos Ópticos Estáticos (Ultraligeros sin costo de GPU) */
-      .optical-lens-backdrop {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        z-index: 0;
-        overflow: hidden;
-      }
+      /* Fondo: anillos dióptricos y resplandor rojo corporativo (igual que el ERP) */
+      .fondo { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+      .fondo span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 50%; }
+      .resplandor { width: 550px; height: 550px; background: rgba(127, 29, 29, 0.15); filter: blur(120px); }
+      .anillo-1 { width: 380px; height: 380px; border: 1px solid rgba(185, 28, 28, 0.1); }
+      .anillo-2 { width: 650px; height: 650px; border: 1px solid rgba(30, 41, 59, 0.4); }
+      .anillo-3 { width: 920px; height: 920px; border: 1px solid rgba(30, 41, 59, 0.2); }
 
-      .lens-ring {
-        position: absolute;
-        border-radius: 50%;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-      }
-      .ring-1 { width: 360px; height: 360px; border: 1px solid rgba(217, 4, 41, 0.1); }
-      .ring-2 { width: 580px; height: 580px; border: 1px solid rgba(255, 255, 255, 0.03); }
-      .ring-3 { width: 880px; height: 880px; border: 1px solid rgba(217, 4, 41, 0.05); }
-
-      .optical-axis-h {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.03) 20%, rgba(217, 4, 41, 0.15) 50%, rgba(255, 255, 255, 0.03) 80%, transparent 100%);
-      }
-
-      .optical-axis-v {
-        position: absolute;
-        left: 50%;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.03) 20%, rgba(217, 4, 41, 0.15) 50%, rgba(255, 255, 255, 0.03) 80%, transparent 100%);
-      }
-
-      /* Tarjeta de Registro Industrial Optiweb */
-      .registration-container {
+      /* Tarjeta central */
+      .tarjeta {
         position: relative;
         z-index: 10;
-        width: 460px;
-        max-width: 94vw;
-        background: var(--om-bg-card);
-        border: 1px solid var(--om-border);
-        border-radius: 18px;
-        padding: 38px 32px 30px 32px;
-        box-shadow:
-          0 20px 50px rgba(0, 0, 0, 0.7),
-          0 0 0 1px rgba(255, 255, 255, 0.05);
-      }
-
-      .registration-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 20%;
-        right: 20%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #d90429 50%, transparent);
-        box-shadow: 0 0 8px rgba(217, 4, 41, 0.7);
-        border-radius: 999px;
-      }
-
-      .registration-header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
-
-      .brand-logo-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 12px;
-      }
-
-      .registration-brand-logo {
         width: 100%;
-        max-width: 300px;
-        height: auto;
-        display: block;
-        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-      }
-
-      .registration-badge-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 12px;
-        background: rgba(217, 4, 41, 0.08);
-        border: 1px solid rgba(217, 4, 41, 0.25);
-        border-radius: 9999px;
-        font-size: 11px;
-        font-weight: 700;
-        color: #ff4d6d;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-
-      .badge-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #d90429;
-        box-shadow: 0 0 6px #d90429;
-      }
-
-      .registration-subtitle {
-        font-size: 12.5px;
-        color: var(--om-text-sub);
-        letter-spacing: 0.2px;
-        line-height: 1.4;
-      }
-
-      /* Grupos y Campos del Formulario */
-      .reg-form-group {
-        margin-bottom: 18px;
-        position: relative;
-      }
-
-      .reg-form-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 11.5px;
-        font-weight: 700;
-        color: var(--om-text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        margin-bottom: 7px;
-      }
-
-      .reg-input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-      }
-
-      .reg-input-icon {
-        position: absolute;
-        left: 14px;
-        color: var(--om-text-sub);
-        pointer-events: none;
-        font-size: 14px;
-        transition: color 0.2s ease;
-      }
-
-      .reg-form-control {
-        width: 100%;
-        height: 46px;
-        background: rgba(8, 11, 17, 0.85);
-        border: 1px solid var(--om-border);
-        border-radius: 10px;
-        padding: 0 16px 0 42px;
-        font-size: 14px;
-        color: var(--om-text-main);
-        outline: none;
-        transition: all 0.2s ease;
-      }
-
-      .reg-form-control::placeholder {
-        color: rgba(148, 163, 184, 0.45);
-        font-size: 13.5px;
-      }
-
-      .reg-form-control:focus {
-        background: rgba(11, 15, 23, 0.95);
-        border-color: var(--om-primary);
-        box-shadow: 0 0 0 3px var(--om-primary-glow);
-      }
-
-      .reg-form-control:focus ~ .reg-input-icon {
-        color: var(--om-primary);
-      }
-
-      .phone-prefix-tag {
-        position: absolute;
-        left: 38px;
-        color: var(--om-text-muted);
-        font-weight: 700;
-        font-size: 13.5px;
-        pointer-events: none;
-        user-select: none;
-      }
-
-      .reg-form-control.phone-input {
-        padding-left: 82px;
-      }
-
-      /* Botón Industrial Principal */
-      .btn-submit-registration {
-        width: 100%;
-        height: 48px;
-        background: linear-gradient(135deg, #d90429 0%, #a0031e 100%);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        color: #ffffff;
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        box-shadow: 0 8px 20px -4px rgba(217, 4, 41, 0.45);
-        transition: all 0.2s ease;
-        margin-top: 1.25rem;
-      }
-
-      .btn-submit-registration:hover {
-        background: linear-gradient(135deg, #ef0833 0%, #b90322 100%);
-        transform: translateY(-1.5px);
-        box-shadow: 0 12px 26px -4px rgba(217, 4, 41, 0.6);
-      }
-
-      .btn-submit-registration:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 12px -2px rgba(217, 4, 41, 0.4);
-      }
-
-      .btn-submit-registration:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      /* Alerta de Error / Validación Inline */
-      .alert-banner {
-        background: rgba(239, 68, 68, 0.12);
-        border: 1px solid rgba(239, 68, 68, 0.35);
-        color: #fca5a5;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 12.5px;
-        font-weight: 600;
-        margin-bottom: 18px;
-        text-align: center;
-      }
-
-      /* Pie de Tarjeta Institucional */
-      .registration-footer {
-        margin-top: 24px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        text-align: center;
+        max-width: 420px;
+        border-radius: 16px;
+        background: var(--om-tarjeta);
+        -webkit-backdrop-filter: blur(24px);
+        backdrop-filter: blur(24px);
+        border: 1px solid var(--om-borde-tarjeta);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        padding: 28px;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 20px;
+      }
+      .tarjeta::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 25%; right: 25%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--om-rojo), transparent);
+        box-shadow: 0 0 12px rgba(217, 4, 41, 0.8);
       }
 
-      .reg-footer-copy {
-        font-size: 11.5px;
-        color: var(--om-text-sub);
-        font-weight: 600;
+      .encabezado { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+      .logo-caja { height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+      .logo { height: 40px; width: auto; max-width: 240px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(217, 4, 41, 0.3)); }
+
+      .distintivo {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 12px; border-radius: 999px;
+        background: rgba(69, 10, 10, 0.4);           /* red-950/40 */
+        border: 1px solid rgba(185, 28, 28, 0.4);    /* red-700/40 */
+        color: #f87171;                              /* red-400 */
+        font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      }
+      .distintivo .punto { width: 6px; height: 6px; border-radius: 50%; background: var(--om-rojo); animation: pulso 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+      @keyframes pulso { 50% { opacity: 0.5; } }
+
+      .subtitulo { font-size: 11px; color: var(--om-secundario); }
+
+      /* Formulario */
+      form { display: flex; flex-direction: column; gap: 16px; font-size: 12px; }
+      .campo { display: flex; flex-direction: column; gap: 6px; }
+      .campo label {
+        display: flex; justify-content: space-between; align-items: baseline;
+        font-size: 11px; font-weight: 700; color: var(--om-label); text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .campo label small { font-size: 10px; font-weight: 600; color: var(--om-tenue); text-transform: none; letter-spacing: 0; }
+      .caja-input { position: relative; display: flex; align-items: center; }
+      .caja-input .icono { position: absolute; left: 14px; font-size: 14px; color: var(--om-tenue); pointer-events: none; }
+      .caja-input .prefijo {
+        position: absolute; left: 38px; font-size: 12px; font-weight: 700; color: var(--om-secundario);
+        pointer-events: none; font-family: 'JetBrains Mono', ui-monospace, monospace;
+      }
+      .caja-input input {
+        width: 100%; height: 44px;
+        padding: 0 14px 0 40px;
+        border-radius: 12px;
+        background: var(--om-input);
+        border: 1px solid var(--om-borde-input);
+        color: #fff; font: inherit; font-size: 12px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      .caja-input input.con-prefijo { padding-left: 80px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+      .caja-input input::placeholder { color: var(--om-tenue); }
+      .caja-input input:focus { border-color: #ef4444; box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.5); }
+      .caja-input input:disabled { opacity: 0.5; }
+      .campo.con-error input { border-color: #ef4444; box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.5); }
+      .campo .ayuda-error { display: none; font-size: 11px; color: #fca5a5; }
+      .campo.con-error .ayuda-error { display: block; }
+
+      .alerta {
+        display: none; align-items: center; gap: 8px;
+        padding: 12px; border-radius: 12px;
+        background: rgba(69, 10, 10, 0.4); border: 1px solid rgba(153, 27, 27, 0.6); color: #fca5a5; font-size: 12px;
+      }
+      .alerta.visible { display: flex; }
+
+      .boton {
+        width: 100%; height: 44px; margin-top: 8px;
+        border: 0; border-radius: 12px;
+        background: var(--om-rojo); color: #fff;
+        font: inherit; font-size: 12px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        box-shadow: 0 10px 15px -3px rgba(69, 10, 10, 0.6);
+        cursor: pointer; transition: background 0.15s ease, transform 0.1s ease;
+      }
+      .boton:hover { background: #dc2626; }
+      .boton:active { transform: scale(0.98); }
+      .boton:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+      .boton .girando { display: inline-block; animation: girar 0.9s linear infinite; }
+      @keyframes girar { to { transform: rotate(360deg); } }
+
+      .nota { font-size: 10.5px; color: var(--om-tenue); text-align: center; line-height: 1.45; }
+
+      .pie {
+        text-align: center; border-top: 1px solid rgba(30, 41, 59, 0.6); padding-top: 12px;
+        font-size: 10px; color: var(--om-tenue); font-family: 'JetBrains Mono', ui-monospace, monospace;
       }
 
-      .reg-footer-sub {
-        font-size: 10.5px;
-        color: rgba(100, 116, 139, 0.7);
-        letter-spacing: 0.3px;
-      }
+      .solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-      @media (max-width: 480px) {
-        .registration-container {
-          padding: 28px 20px 22px 20px;
-        }
-        .registration-brand-logo {
-          max-width: 260px;
-        }
+      @media (max-width: 400px) {
+        .tarjeta { padding: 22px 18px; }
+        .logo { max-width: 210px; }
       }
-
       @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.01ms !important;
-          transition-duration: 0.01ms !important;
-        }
+        .distintivo .punto, .boton .girando { animation: none; }
       }
     </style>
 
     <script>
-      // Auth Check: fast redirect without artificial blank page
-      if (localStorage.getItem("registeredClient")) {
-        document.documentElement.style.display = "none";
-        window.location.href = "index.html";
-      }
+      // Si ya se identificó en este navegador, entra directo al panel
+      try {
+        if (localStorage.getItem("registeredClient")) {
+          document.documentElement.style.display = "none";
+          window.location.replace("index.html");
+        }
+      } catch (_) {}
     </script>
   </head>
-  <body class="registration-page">
-    <!-- Retícula y Anillos Ópticos Estáticos -->
-    <div class="optical-lens-backdrop">
-      <div class="lens-ring ring-1"></div>
-      <div class="lens-ring ring-2"></div>
-      <div class="lens-ring ring-3"></div>
-      <div class="optical-axis-h"></div>
-      <div class="optical-axis-v"></div>
+  <body>
+    <div class="fondo" aria-hidden="true">
+      <span class="resplandor"></span>
+      <span class="anillo-1"></span>
+      <span class="anillo-2"></span>
+      <span class="anillo-3"></span>
     </div>
 
-    <!-- Formularios ocultos de Netlify Forms -->
+    <!-- Formularios ocultos de Netlify Forms (registro de clientes y visitas) -->
     <form name="registros" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="optica" />
       <input type="text" name="celular" />
@@ -384,193 +218,149 @@
       <input type="text" name="fecha_hora" />
     </form>
 
-    <!-- Tarjeta Principal de Registro -->
-    <main class="registration-container" role="main">
-      <!-- Encabezado con Logotipo Oficial Optiweb -->
-      <div class="registration-header">
-        <div class="brand-logo-wrapper">
-          <img
-            src="images/optimarket_logo_mejorado.svg"
-            alt="OPTIMARKET S.R.L. - Laboratorio Óptico & Distribuidora"
-            class="registration-brand-logo"
-          />
+    <main class="tarjeta" aria-labelledby="titulo-panel">
+      <header class="encabezado">
+        <div class="logo-caja">
+          <img src="images/optimarket_logo_mejorado.svg" alt="OPTIMARKET S.R.L." class="logo" width="240" height="40" />
         </div>
-        <div class="registration-badge-tag">
-          <span class="badge-dot"></span>
-          <span>Identificación de Óptica</span>
-        </div>
-        <p class="registration-subtitle">Consulta de Catálogo y Cotizaciones Mayoristas</p>
+        <h1 id="titulo-panel" class="distintivo">
+          <span class="punto" aria-hidden="true"></span>
+          <span>Panel para Clientes</span>
+        </h1>
+        <p class="subtitulo">Laboratorio Óptico &amp; Distribuidora de Productos Ópticos</p>
+      </header>
+
+      <div id="alerta" class="alerta" role="alert">
+        <span aria-hidden="true">⚠️</span>
+        <span id="alertaTexto"></span>
       </div>
 
-      <!-- Banner de Alerta de Error / Validación -->
-      <div id="regAlert" class="alert-banner" role="alert" style="display: none;"></div>
-
-      <!-- Formulario de Registro de Visitante (sin usuario ni contraseña) -->
-      <form id="registrationForm" novalidate>
-        <!-- Campo: Nombre de Óptica -->
-        <div class="reg-form-group">
-          <label for="opticaName" class="reg-form-label">
-            <span>Nombre de Óptica *</span>
-          </label>
-          <div class="reg-input-wrapper">
+      <form id="formAcceso" novalidate>
+        <div class="campo" id="campoOptica">
+          <label for="opticaName"><span>Nombre de la óptica</span></label>
+          <div class="caja-input">
+            <span class="icono" aria-hidden="true">🏪</span>
             <input
-              type="text"
-              id="opticaName"
-              name="optica"
-              class="reg-form-control"
-              placeholder="Ej: Visión Extreme"
-              required
-              autocomplete="organization"
-              spellcheck="false"
+              type="text" id="opticaName" name="optica"
+              placeholder="Ej.: Óptica Visión Extreme"
+              autocomplete="organization" spellcheck="false" maxlength="80"
+              required autofocus aria-describedby="errorOptica"
             />
-            <span class="reg-input-icon">
-              <i class="fas fa-store"></i>
-            </span>
+          </div>
+          <span class="ayuda-error" id="errorOptica">Escribe el nombre de tu óptica.</span>
+        </div>
+
+        <div class="campo" id="campoCelular">
+          <label for="phoneNumber"><span>Celular</span></label>
+          <div class="caja-input">
+            <span class="icono" aria-hidden="true">📱</span>
+            <span class="prefijo" aria-hidden="true">+591</span>
+            <input
+              type="tel" id="phoneNumber" name="celular" class="con-prefijo"
+              placeholder="70000000" inputmode="numeric" maxlength="8"
+              autocomplete="tel-national" required aria-describedby="errorCelular"
+            />
+          </div>
+          <span class="ayuda-error" id="errorCelular">El celular debe tener 8 dígitos (ej.: 70000000).</span>
+        </div>
+
+        <div class="campo">
+          <label for="nit"><span>NIT</span><small>opcional</small></label>
+          <div class="caja-input">
+            <span class="icono" aria-hidden="true">🧾</span>
+            <input type="text" id="nit" name="nit" placeholder="Para cotizaciones facturadas" autocomplete="off" maxlength="20" inputmode="numeric" />
           </div>
         </div>
 
-        <!-- Campo: Número de Celular -->
-        <div class="reg-form-group">
-          <label for="phoneNumber" class="reg-form-label">
-            <span>Número de Celular *</span>
-          </label>
-          <div class="reg-input-wrapper">
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="celular"
-              class="reg-form-control phone-input"
-              placeholder="70000000"
-              maxlength="8"
-              pattern="[0-9]{8}"
-              required
-              autocomplete="tel"
-            />
-            <span class="reg-input-icon">
-              <i class="fas fa-phone-alt"></i>
-            </span>
-            <span class="phone-prefix-tag">+591</span>
-          </div>
-        </div>
-
-        <!-- Campo: NIT (Opcional) -->
-        <div class="reg-form-group">
-          <label for="nit" class="reg-form-label">
-            <span>NIT (Opcional)</span>
-          </label>
-          <div class="reg-input-wrapper">
-            <input
-              type="text"
-              id="nit"
-              name="nit"
-              class="reg-form-control"
-              placeholder="000000000-0"
-              autocomplete="off"
-            />
-            <span class="reg-input-icon">
-              <i class="fas fa-id-card"></i>
-            </span>
-          </div>
-        </div>
-
-        <!-- Botón de Envío -->
-        <button
-          type="submit"
-          id="btnSubmitRegistration"
-          class="btn-submit-registration"
-        >
-          <span>Acceder al Catálogo</span>
-          <i class="fas fa-arrow-right"></i>
+        <button type="submit" id="btnIngresar" class="boton">
+          <span>Ingresar al panel</span>
         </button>
+
+        <p class="nota">Catálogo, precios y pedidos para ópticas. Tus datos solo se usan para atender tus pedidos.</p>
       </form>
 
-      <!-- Pie de Tarjeta Institucional -->
-      <div class="registration-footer">
-        <p class="reg-footer-copy">OPTIMARKET S.R.L. • Catálogo Digital</p>
-        <p class="reg-footer-sub">Laboratorio Óptico &amp; Distribuidora Mayorista</p>
-      </div>
+      <footer class="pie">OPTIMARKET S.R.L. © <span id="anio">2026</span> — Todos los derechos reservados</footer>
     </main>
 
     <script>
-      const form = document.getElementById("registrationForm");
-      const submitBtn = document.getElementById("btnSubmitRegistration");
+      (function () {
+        var form = document.getElementById("formAcceso");
+        var boton = document.getElementById("btnIngresar");
+        var optica = document.getElementById("opticaName");
+        var celular = document.getElementById("phoneNumber");
+        var nit = document.getElementById("nit");
+        var alerta = document.getElementById("alerta");
+        var alertaTexto = document.getElementById("alertaTexto");
+        document.getElementById("anio").textContent = new Date().getFullYear();
 
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const opticaInput = document.getElementById("opticaName");
-        const phoneInput = document.getElementById("phoneNumber");
-        const rawOptica = opticaInput.value.trim();
-        const phone = phoneInput.value.trim();
-        const nit = document.getElementById("nit").value.trim() || "Sin NIT";
-
-        const regAlert = document.getElementById("regAlert");
-        if (regAlert) regAlert.style.display = "none";
-
-        if (!rawOptica) {
-          if (regAlert) {
-            regAlert.textContent = "Por favor ingrese el nombre de su óptica.";
-            regAlert.style.display = "block";
+        // Recordar la última óptica usada en este navegador (no hay contraseñas que guardar)
+        try {
+          var ultimo = JSON.parse(localStorage.getItem("ultimoCliente") || "null");
+          if (ultimo) {
+            optica.value = ultimo.optica || "";
+            celular.value = ultimo.phone || "";
+            nit.value = ultimo.nit && ultimo.nit !== "Sin NIT" ? ultimo.nit : "";
           }
-          opticaInput.focus();
-          return;
+        } catch (_) {}
+
+        // Celular y NIT: solo números
+        [celular, nit].forEach(function (el) {
+          el.addEventListener("input", function () { el.value = el.value.replace(/[^0-9]/g, ""); });
+        });
+        [optica, celular].forEach(function (el) {
+          el.addEventListener("input", function () { el.closest(".campo").classList.remove("con-error"); el.removeAttribute("aria-invalid"); ocultarAlerta(); });
+        });
+
+        function mostrarAlerta(texto) { alertaTexto.textContent = texto; alerta.classList.add("visible"); }
+        function ocultarAlerta() { alerta.classList.remove("visible"); }
+        // Error de un campo: se marca en rojo con su mensaje debajo y recibe el foco (la alerta de arriba queda para otros errores)
+        function marcar(el, mensaje) {
+          var campo = el.closest(".campo");
+          campo.classList.add("con-error");
+          var ayuda = campo.querySelector(".ayuda-error");
+          if (ayuda) ayuda.textContent = mensaje;
+          el.setAttribute("aria-invalid", "true");
+          el.focus();
         }
 
-        if (!phone || !/^[0-9]{8}$/.test(phone)) {
-          if (regAlert) {
-            regAlert.textContent = "Por favor ingrese un número de celular boliviano válido de 8 dígitos.";
-            regAlert.style.display = "block";
-          }
-          phoneInput.focus();
-          return;
+        function enviarNetlify(datos) {
+          return fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams(datos).toString(),
+          }).catch(function (err) { console.error("Registro no enviado:", err); });
         }
 
-        const normalizedOptica = rawOptica.toUpperCase();
-        const now = new Date().toLocaleString();
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          ocultarAlerta();
+          var nombre = optica.value.trim().replace(/\s+/g, " ");
+          var tel = celular.value.trim();
+          var nitValor = nit.value.trim() || "Sin NIT";
 
-        const clientData = {
-          optica: normalizedOptica,
-          phone: phone,
-          nit: nit,
-        };
+          if (nombre.length < 3) return marcar(optica, "Escribe el nombre de tu óptica.");
+          if (!/^[67][0-9]{7}$/.test(tel)) return marcar(celular, "El celular debe tener 8 dígitos y empezar con 6 o 7.");
 
-        if (submitBtn) {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = `<span>Ingresando al catálogo...</span> <i class="fas fa-spinner fa-spin"></i>`;
-        }
+          var cliente = { optica: nombre.toUpperCase(), phone: tel, nit: nitValor };
+          var ahora = new Date().toLocaleString("es-BO");
 
-        localStorage.setItem("registeredClient", JSON.stringify(clientData));
+          boton.disabled = true;
+          boton.innerHTML = '<span class="girando" aria-hidden="true">⟳</span><span>Ingresando…</span>';
 
-        // 1. Netlify Form: registros
-        const regData = new FormData();
-        regData.append("form-name", "registros");
-        regData.append("optica", normalizedOptica);
-        regData.append("celular", phone);
-        regData.append("nit", nit);
-        regData.append("fecha_hora", now);
+          try {
+            localStorage.setItem("registeredClient", JSON.stringify(cliente));
+            localStorage.setItem("ultimoCliente", JSON.stringify(cliente));
+          } catch (_) {}
 
-        fetch("/", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams(regData).toString(),
-        }).catch((err) => console.error("Registration log error:", err));
+          Promise.all([
+            enviarNetlify({ "form-name": "registros", optica: cliente.optica, celular: tel, nit: nitValor, fecha_hora: ahora }),
+            enviarNetlify({ "form-name": "visitas", optica: cliente.optica, fecha_hora: ahora }),
+          ]).finally(function () { window.location.href = "index.html"; });
 
-        // 2. Netlify Form: visitas
-        const visitData = new FormData();
-        visitData.append("form-name", "visitas");
-        visitData.append("optica", normalizedOptica);
-        visitData.append("fecha_hora", now);
-
-        fetch("/", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams(visitData).toString(),
-        }).catch((err) => console.error("Visit log error:", err));
-
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 500);
-      });
+          // Por si la red tarda: no dejar al cliente esperando más de 2,5 s
+          setTimeout(function () { window.location.href = "index.html"; }, 2500);
+        });
+      })();
     </script>
   </body>
 </html>

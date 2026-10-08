@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "nota": "Diccionario de búsqueda del Panel para Clientes. Si el cliente busca EXACTAMENTE una de las «palabras», se muestran solo los productos indicados (con 2+ palabras también vale el comienzo, ej. «boca de» → «boca de pescado»). Los nombres deben ser iguales a los del sistema (mayúsculas y tildes no importan). «modelos» busca dentro de una subcategoría; «etiqueta» es el otro nombre que se muestra en la tarjeta.",
+  "sinonimos": [
+    {
+      "palabras": [
+        "cuerina",
+        "boca de pescado",
+        "boca pescado"
+      ],
+      "modelos": [
+        {
+          "subcategoria": "Estuches de Monturas",
+          "modelo": "CUERINA"
+        }
+      ],
+      "etiqueta": "Boca de Pescado"
+    },
+    {
+      "palabras": [
+        "blanco",
+        "blanca",
+        "cr39",
+        "cr-39",
+        "cr 39"
+      ],
+      "subcategorias": [
+        "Organico Blanco",
+        "Bifocal Blanco",
+        "Progresivo Blanco",
+        "Bifocal Org Blue Block Blanco"
+      ]
+    },
+    {
+      "palabras": [
+        "ar",
+        "a.r.",
+        "antireflejo",
+        "antirreflejo",
+        "anti reflejo"
+      ],
+      "subcategorias": [
+        "Organico AntiReflejo",
+        "Bifocal AR",
+        "Bifocal Invisible Antireflejo",
+        "Bifocal Invisible Fotocromatico Antireflejo"
+      ]
+    },
+    {
+      "palabras": [
+        "blue block"
+      ],
+      "subcategorias": [
+        "Organico Blue Cut"
+      ]
+    },
+    {
+      "palabras": [
+        "antireflex",
+        "anti reflex"
+      ],
+      "subcategorias": [
+        "Organico AntiReflejo"
+      ]
+    },
+    {
+      "palabras": [
+        "bif invisible blanco",
+        "bifocal listo invisible en blanco",
+        "bifocal listo invisible blanco"
+      ],
+      "subcategorias": [
+        "Bifocal Invisible Blanco"
+      ]
+    },
+    {
+      "palabras": [
+        "prog blue foto"
+      ],
+      "subcategorias": [
+        "Progresivo Foto Blue Block"
+      ]
+    },
+    {
+      "palabras": [
+        "org blanco",
+        "org blan"
+      ],
+      "subcategorias": [
+        "Organico Blanco"
+      ]
+    }
+  ]
+}

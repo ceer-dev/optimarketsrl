@@ -31,6 +31,21 @@
     Cache-Control = "public, max-age=0, must-revalidate"
     Content-Type = "application/json; charset=utf-8"
 
+# Catálogo del Panel para Clientes (lo genera el ERP: scripts/exportar-catalogo-clientes.js).
+# Siempre se revalida (ETag): al publicar un catálogo nuevo, los clientes lo ven al instante; si no cambió, no se descarga de nuevo.
+[[headers]]
+  for = "/catalogo/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Content-Type = "application/json; charset=utf-8"
+
+# Diccionario de búsqueda: los cambios se ven apenas se publica
+[[headers]]
+  for = "/config/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Content-Type = "application/json; charset=utf-8"
+
 # Static Images (SVG, WebP, PNG):
 # Note: Unversioned static files whose URLs do not change automatically MUST NOT
 # have a 1-year immutable cache (max-age=31536000). We use must-revalidate so

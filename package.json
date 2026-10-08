@@ -4,6 +4,7 @@
   "private": true,
   "description": "Optimarket SRL - Catálogo Digital y Sistema de Cotizaciones",
   "scripts": {
+    "start": "node scripts/serve.js",
     "test": "node --check js/*.js app.js && python scripts/validate_catalog.py",
     "validate:prices": "python scripts/validate_catalog.py"
   },
