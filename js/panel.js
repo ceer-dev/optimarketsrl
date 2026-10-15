@@ -495,13 +495,13 @@
 
     var campos;
     if (tipo === "materiallisto") {
-      campos = '<div class="campos-dos"><label class="campo-medida"><span>Esfera</span><input id="fEsfera" inputmode="decimal" autocomplete="off" placeholder="ej: +0.25, -1.50"></label>' +
-        '<label class="campo-medida"><span>ADD</span><input id="fAdd" inputmode="decimal" autocomplete="off" placeholder="ej: +1.50, +2.00"></label></div>';
+      campos = '<div class="campos-dos"><label class="campo-medida"><span>Esfera</span><input id="fEsfera" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="ej: +0.25, -1.50"></label>' +
+        '<label class="campo-medida"><span>ADD</span><input id="fAdd" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="ej: +1.50, +2.00"></label></div>';
     } else if (tipo === "block") {
-      campos = '<div class="campos-dos"><label class="campo-medida"><span>Base</span><input id="fBase" inputmode="numeric" autocomplete="off" placeholder="ej: 4, 6"></label>' +
-        '<label class="campo-medida"><span>ADD</span><input id="fAdd" inputmode="decimal" autocomplete="off" placeholder="ej: +1.50, 150"></label></div>';
+      campos = '<div class="campos-dos"><label class="campo-medida"><span>Base</span><input id="fBase" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="ej: 4, 6"></label>' +
+        '<label class="campo-medida"><span>ADD</span><input id="fAdd" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="ej: +1.50, 150"></label></div>';
     } else {
-      campos = '<label class="campo-medida"><span>Medida</span><input id="fMedida" inputmode="text" autocomplete="off" placeholder="Ej: +2.50-0.25, -1.50, cil -0.25"></label>';
+      campos = '<label class="campo-medida"><span>Medida</span><input id="fMedida" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="Ej: +2.50-0.25, -1.50, cil -0.25"></label>';
     }
 
     var capa = abrirVentana(
@@ -528,8 +528,11 @@
 
     function leerCampos() {
       function valor(id) { var e = $(id); return e ? e.value.trim() : ""; }
+      // Sin signo = positiva («0.50» → «+0.50»): el teclado del celular a veces no muestra el «+»
+      function conSigno(t) { return /^[\d.,]/.test(t) ? "+" + t : t; }
       // «+250» se entiende +2.50 en medida, esfera y ADD (la base del block es un número entero: queda igual)
-      return { medida: dioptriasSinPunto(valor("fMedida")), esfera: dioptriasSinPunto(valor("fEsfera")), base: valor("fBase"), add: dioptriasSinPunto(valor("fAdd")) };
+      return { medida: dioptriasSinPunto(conSigno(valor("fMedida"))), esfera: dioptriasSinPunto(conSigno(valor("fEsfera"))),
+        base: valor("fBase"), add: dioptriasSinPunto(conSigno(valor("fAdd"))) };
     }
     function pintarResumen() {
       var precio = resuelta ? resuelta[2] : null;
