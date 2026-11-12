@@ -448,3 +448,21 @@ body.sin-barra .boton-asistente { bottom: calc(16px + env(safe-area-inset-bottom
 .tp-buscar-item small { font-size: 12px; color: var(--secundario); }
 .tp-buscar-item .flecha { color: var(--tenue); font-size: 20px; }
 .tp-buscar-item:active { transform: scale(0.99); }
+
+/* ---------- Asistente: precios por rangos dentro del chat (panel.js preciosParaChat) ---------- */
+.as-msj:has(.tp-chat) { max-width: 100%; width: 100%; }
+.tp-chat { margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+.tp-chat .tp-leyenda { margin: 0; font-size: 12px; }
+.tp-sec-plegable { padding: 8px; border-radius: 14px; }
+.tp-sec-plegable > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.tp-sec-plegable > summary::-webkit-details-marker { display: none; }
+.tp-sec-plegable > summary::after { content: '▾'; color: var(--secundario); font-size: 16px; transition: transform 0.15s; }
+.tp-sec-plegable[open] > summary::after { transform: rotate(180deg); }
+.tp-sec-plegable > summary .tp-sec-titulo { margin: 0; font-size: 12px; padding: 4px 12px; }
+.tp-sec-plegable[open] > summary { margin-bottom: 8px; }
+.tp-chat .tp-box { min-height: 52px; padding: 8px 10px 8px 12px; }
+.tp-chat .tp-box-rango b { font-size: 13.5px; }
+.tp-chat .tp-monto b { font-size: 19px; }
+.tp-chat .tp-grupo-titulo b { font-size: 14px; }
+.as-botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.as-gris { background: var(--tarjeta); border: 1px solid var(--borde); color: var(--texto); }

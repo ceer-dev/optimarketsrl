@@ -6,6 +6,8 @@
  *     «bifocal blanco +1.25 add 2», «block base 6 add 200», «cil -0.50».
  *   - Si esa medida EXISTE en el catálogo (nunca promete stock: el stock del sistema no siempre está al día).
  *   - Precios de productos directos: «cartilla», «estuche cuerina», «350ACE».
+ *   - Precios de un material de lentes SIN medida («precios del organico antireflejo», «cuánto cuesta el bifocal ar»):
+ *     muestra ahí mismo sus precios por rangos, en recuadros, igual que la Tabla de precios (panel.js preciosParaChat).
  *   - Horario, formas de pago, cómo pedir y contacto con un asesor (WhatsApp).
  * Usa el diccionario de búsqueda (config/diccionario-busqueda.json): «cr39», «blanco», «ar», «boca de pescado»…
  * Lo carga panel.js recién cuando el cliente toca «Asistente» (no pesa en la carga inicial). JavaScript simple (Android 11).
@@ -282,6 +284,25 @@
     return html + '<p class="as-nota">' + NOTA_PRECIOS + "</p>";
   }
 
+  /** Precios por rangos de UN material, dentro del chat, con botones para verlos en pantalla completa o pedir. */
+  function responderTablaPrecios(x) {
+    return api.cargarCategoria(x.cat).then(function (datos) {
+      var html = api.preciosParaChat(x.cat, datos, x.sub);
+      if (!html) return "<p><b>" + esc(x.sub.nombre) + "</b> todavía no tiene precios cargados.</p>" + contacto();
+      return "<p>Precios de <b>" + esc(x.sub.nombre) + "</b> <span class=\"as-nota\">(" + esc(x.cat.nombre) + ")</span>:</p>" + html +
+        '<p class="as-botones">' + boton("Ver en pantalla completa", function () { cerrar(); api.verPrecios(x.cat, x.sub); }, "as-gris") +
+        boton("🛒 Hacer pedido", function () { cerrar(); api.abrirMedida(x.cat, x.sub, null); }, "as-rojo") + "</p>" +
+        '<p class="as-nota">Si me escribes la medida (ej. <span class="mono">+2.50-0.50</span>) te digo su precio exacto. ' + NOTA_PRECIOS + "</p>";
+    });
+  }
+  /** Varios materiales coinciden: que el cliente elija cuál quiere ver */
+  function elegirMaterialParaPrecios(opticos) {
+    return "<p>¿De cuál material quieres ver los precios?</p><ul class=\"as-lista\">" + opticos.slice(0, MAX_LINEAS).map(function (x) {
+      return filaRespuesta(x.sub.nombre, esc(x.cat.nombre) + (x.sub.desde != null ? " · desde <b>" + bs(x.sub.desde) + "</b>" : ""),
+        boton("Ver precios", function () { responderTablaPrecios(x).then(decir); }, "as-rojo"));
+    }).join("") + "</ul>" + (opticos.length > MAX_LINEAS ? '<p class="as-nota">… y ' + (opticos.length - MAX_LINEAS) + " más. Escríbeme el nombre completo.</p>" : "");
+  }
+
   /** Cerebro del asistente: frase del cliente → respuesta (HTML) */
   function responder(frase) {
     var t = api.normalizar(frase);
@@ -308,6 +329,11 @@
     }
     var productos = buscarProductos(medida ? medida.resto : frase);
     if (medida) return responderMedida(medida, productos, preguntaStock);
+    // Sin medida y un material de lentes: sus precios a la vista (si pregunta por precios, o si solo hay uno que coincide)
+    var opticos = productos.subs.filter(function (x) { return api.tipoOptico(x.cat); });
+    var pidePrecios = /\b(precio|precios|cuanto|cuesta|cuestan|vale|valen|costo|costos|tarifa|tarifas|lista|tabla|cotiza\w*)\b/.test(t);
+    if (opticos.length === 1 && !productos.modelos.length && (pidePrecios || productos.subs.length === 1)) return responderTablaPrecios(opticos[0]);
+    if (opticos.length > 1 && pidePrecios) return Promise.resolve(elegirMaterialParaPrecios(opticos));
     if (productos.subs.length || productos.modelos.length) return Promise.resolve(responderProductos(productos));
     return Promise.resolve(noEntendi());
   }
@@ -319,7 +345,8 @@
     div.className = "as-msj " + (m.de === "cliente" ? "as-cliente" : "as-bot");
     div.innerHTML = m.de === "cliente" ? esc(m.texto) : m.html;
     lista.appendChild(div);
-    lista.scrollTop = lista.scrollHeight;
+    // Respuesta larga (precios por rangos): que se vea desde su comienzo, no desde el final
+    lista.scrollTop = div.querySelector(".tp-chat") ? Math.max(0, div.offsetTop - lista.offsetTop - 8) : lista.scrollHeight;
     return div;
   }
   function decir(html) { var m = { de: "bot", html: html }; mensajes.push(m); if (capa) pintarMensaje(m); }

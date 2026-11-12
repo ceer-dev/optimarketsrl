@@ -472,7 +472,7 @@
       '<div class="tp-box-rango"><small>' + esc(etiqueta) + "</small><b>" + rangoHtml + "</b></div>" +
       '<div class="tp-box-precios">' + precios + "</div></div>";
   }
-  function htmlSeccion(sec, i, ctx) {
+  function htmlSeccion(sec, i, ctx, plegable) {
     var cuerpo = "";
     if (sec.tipo === "lista") {
       var eje = /cilindro/i.test(sec.titulo) ? "Cilindro" : /esf/i.test(sec.titulo) ? "Esfera" : "Medida";
@@ -496,6 +496,9 @@
         cuerpo += '<div class="tp-grupo"><div class="tp-grupo-titulo tp-titulo-especial">⚠ Medidas con precio especial</div><div class="tp-cajas">' +
           sec.excepciones.map(function (e) { return cajaPrecio("Medida", esc(e.medida), e.cf, ctx, true); }).join("") + "</div></div>";
       }
+    }
+    if (plegable) {
+      return '<details class="tp-sec tp-sec-plegable"' + (i === 0 ? " open" : "") + '><summary><span class="tp-sec-titulo">' + esc(sec.titulo) + "</span></summary>" + cuerpo + "</details>";
     }
     return '<section class="tp-sec" id="tpSec' + i + '"><h2 class="tp-sec-titulo">' + esc(sec.titulo) + "</h2>" + cuerpo + "</section>";
   }
@@ -529,9 +532,9 @@
     setTimeout(function () { entrada.focus(); }, 60);
   }
   function tituloCorto(t) { return String(t).replace(/^Combinados · esfera/, "Combinado").replace(/ con ADD$/, " + ADD"); }
-  function vistaTabla(cat, datos, sub) {
+  function armarPrecios(cat, datos, sub) {
     var tipo = tipoOptico(cat);
-    // Solo el precio facturado: los rangos se arman con el CF (el SF, si el catálogo lo trae, no se usa ni se muestra)
+    // Solo el precio del catálogo (CF): los rangos se arman con él (el SF, si el catálogo lo trae, no se usa ni se muestra)
     var secciones = window.TablaPrecios ? window.TablaPrecios.construir(tipo, datos.subcategorias[sub.id] || [], { conSF: false }) : [];
     // Color por precio (del más barato al más caro) para ver de un vistazo dónde cambia
     var montos = {};
@@ -547,6 +550,21 @@
         return TONOS[orden.length <= 1 ? 0 : Math.round(i * (TONOS.length - 1) / (orden.length - 1))];
       }
     };
+    return { tipo: tipo, secciones: secciones, ctx: ctx };
+  }
+  function leyendaPrecios(porPar) {
+    return porPar ? "<b>Se vende por PAR</b> (1 par = los 2 lentes)" : "<b>½ par</b> = 1 lente · <b>1 par</b> = 2 lentes";
+  }
+  /** Los precios de un material en recuadros plegables, para mostrarlos dentro del chat del asistente. */
+  function preciosParaChat(cat, datos, sub) {
+    var p = armarPrecios(cat, datos, sub);
+    if (!p.secciones.length) return "";
+    return '<div class="tp-chat"><p class="tp-leyenda">' + leyendaPrecios(p.ctx.porPar) + "</p>" +
+      p.secciones.map(function (s, i) { return htmlSeccion(s, i, p.ctx, true); }).join("") + "</div>";
+  }
+  function vistaTabla(cat, datos, sub) {
+    var armado = armarPrecios(cat, datos, sub);
+    var tipo = armado.tipo; var secciones = armado.secciones; var ctx = armado.ctx;
     var palabras = String(sub.nombre).trim().split(/\s+/);
     var arriba = palabras.length > 1 ? palabras.shift() : cat.nombre;
     var fotos = sub.galeria && sub.galeria.length ? sub.galeria : (sub.imagen ? [{ thumb: sub.imagen, zoom: sub.zoom || sub.imagen }] : []);
@@ -567,8 +585,7 @@
       '<nav class="tp-hermanos" aria-label="Materiales de ' + esc(cat.nombre) + '">' + cat.subcategorias.map(function (s) {
         return '<a class="chip" href="#/c/' + esc(cat.slug) + "/t/" + s.id + '" aria-pressed="' + (s.id === sub.id) + '">' + esc(s.nombre) + "</a>";
       }).join("") + "</nav>" +
-      '<p class="tp-leyenda">' +
-      (ctx.porPar ? "<b>Se vende por PAR</b> (1 par = los 2 lentes)" : "<b>½ par</b> = 1 lente · <b>1 par</b> = 2 lentes") + "</p>" +
+      '<p class="tp-leyenda">' + leyendaPrecios(ctx.porPar) + "</p>" +
       botonPedir('') +
       (secciones.length > 1 ? '<nav class="tp-indice" aria-label="Ir a">' + secciones.map(function (s, i) {
         return '<button type="button" class="chip" data-ir="tpSec' + i + '">' + esc(tituloCorto(s.titulo)) + "</button>";
@@ -958,6 +975,8 @@
       medidaPendiente = medida;
       if (location.hash === destino) rutear(); else location.hash = destino;
     },
+    preciosParaChat: preciosParaChat,
+    verPrecios: function (cat, sub) { location.hash = "#/c/" + cat.slug + "/t/" + sub.id; },
     agregarModelo: function (cat, sub, id) {
       asegurarCategoria(cat).then(function (d) { ventanaCantidad(cat, d, sub, id, location.hash); });
     }
