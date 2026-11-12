@@ -91,8 +91,13 @@ async function runTest() {
     await page.waitForSelector('#grillaSub .tarjeta-sub', { timeout: 10000 });
     console.log('[OK] Lentilla subcategories visible.');
 
-    // 3) Ventana de medida: «+2,50-0,50» (con coma) debe encontrarse y permitir agregar
+    // 3) Tabla de precios por rangos (js/tabla-precios.js) y, desde ahí, «Hacer pedido»
     await page.click('#grillaSub .tarjeta-sub');
+    await page.waitForSelector('.tp-caja .tp-tabla', { timeout: 10000 });
+    console.log('[OK] Price table by ranges visible.');
+    await page.click('#tpPedir');
+
+    // 4) Ventana de medida: «+2,50-0,50» (con coma) debe encontrarse y permitir agregar
     await page.waitForSelector('#fMedida', { visible: true, timeout: 10000 });
     await page.type('#fMedida', '+2,50-0,50');
     await page.waitForFunction(() => !document.getElementById('btnAgregar').disabled, { timeout: 5000 });

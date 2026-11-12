@@ -368,3 +368,54 @@ body.sin-barra .boton-asistente { bottom: calc(16px + env(safe-area-inset-bottom
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55); font-size: 13px; font-weight: 700;
 }
 .aviso-version .boton-chico { margin-top: 0; flex: none; }
+
+/* ---------- Tabla de precios por rangos (lentes) — js/tabla-precios.js ---------- */
+.tp-cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 14px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid rgba(217, 4, 41, 0.45); box-shadow: 0 10px 18px -16px rgba(217, 4, 41, 0.9); }
+.tp-titulos { min-width: 0; flex: 1 1 260px; }
+.tp-sobretitulo { display: block; font-size: 18px; letter-spacing: 0.32em; font-weight: 600; color: var(--texto); }
+.tp-titulo { font-size: clamp(26px, 7vw, 44px); line-height: 1.02; font-weight: 900; color: var(--rojo); text-transform: uppercase; text-shadow: 0 0 22px rgba(217, 4, 41, 0.35); word-break: break-word; }
+.tp-controles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tp-selector { height: 38px; max-width: 100%; padding: 0 12px; border-radius: 12px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); font: inherit; font-weight: 700; font-size: 13px; }
+.tp-fotos { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.tp-foto { width: 74px; height: 92px; border-radius: 12px; border: 1px solid var(--borde); background: #0a0d13; padding: 4px; overflow: hidden; }
+.tp-foto img { width: 100%; height: 100%; object-fit: contain; }
+.tp-foto:active { transform: scale(0.97); }
+@media (min-width: 640px) { .tp-foto { width: 96px; height: 116px; } }
+.tp-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.tp-acciones .elegidos { margin: 0; align-self: center; }
+.tp-leyenda { font-size: 11.5px; color: var(--secundario); }
+.tp-leyenda b { color: var(--texto); }
+.tp-secciones { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+@media (min-width: 860px) { .tp-secciones { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tp-ancha { grid-column: 1 / -1; } }
+.tp-caja { position: relative; border: 1px solid rgba(217, 4, 41, 0.35); border-radius: 18px; background: var(--tarjeta); padding: 26px 10px 12px; box-shadow: 0 0 24px -12px rgba(217, 4, 41, 0.5); }
+.tp-pildora { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); white-space: nowrap; background: var(--rojo); color: #fff; font-size: 13px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 18px; border-radius: 999px; box-shadow: 0 6px 16px -4px rgba(217, 4, 41, 0.7); }
+.tp-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--borde); }
+.tp-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tp-tabla th, .tp-tabla td { padding: 10px 8px; border-bottom: 1px solid var(--borde-suave); text-align: center; white-space: nowrap; }
+.tp-tabla tbody tr:last-child th, .tp-tabla tbody tr:last-child td { border-bottom: 0; }
+.tp-tabla thead th { background: #0a0d13; font-size: 11.5px; font-weight: 800; color: var(--secundario); }
+.tp-tabla thead .tp-col { color: var(--rojo-claro); }
+.tp-tabla thead .tp-col small { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 700; color: var(--texto); text-transform: none; letter-spacing: 0; }
+.tp-rango-titulo, .tp-rango { text-align: left !important; }
+.tp-rango, .tp-rango-fila { font-weight: 700; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; }
+.tp-rango span, .tp-rango-fila span, .tp-rango-col span { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--secundario); }
+.tp-precio b { font-size: 16px; font-weight: 900; color: #fff; }
+.tp-precio small { margin-left: 2px; font-size: 10px; font-weight: 800; color: var(--rojo-claro); }
+.tp-vacio { color: var(--tenue); font-weight: 900; }
+.tp-matriz .tp-eje, .tp-matriz .tp-rango-fila { background: var(--rojo); color: #fff; position: sticky; left: 0; z-index: 1; }
+.tp-matriz .tp-eje { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+.tp-matriz .tp-rango-fila { border-bottom-color: rgba(255, 255, 255, 0.18); }
+.tp-matriz .tp-rango-fila span { color: rgba(255, 255, 255, 0.8); }
+.tp-matriz .tp-eje-col { color: var(--texto) !important; letter-spacing: 0.12em; text-transform: uppercase; }
+.tp-matriz .tp-rango-col { color: var(--texto) !important; font-family: 'JetBrains Mono', ui-monospace, monospace; border-left: 1px solid var(--borde); }
+.tp-matriz td:nth-child(2n) { border-left: 1px solid var(--borde); }
+.tp-nota { margin-top: 8px; font-size: 11.5px; color: var(--ambar); }
+.tp-ventana-foto { position: relative; padding: 10px; align-items: center; justify-content: center; }
+.tp-ventana-foto img { max-height: 80vh; width: auto; margin: 0 auto; object-fit: contain; }
+.tp-cerrar-foto { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--borde); background: var(--superficie); z-index: 2; }
+
+/* ---------- Material Listo y Block: se venden por PAR (cantidad 1 = 1 par) ---------- */
+.bloque > .fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bloque-par { border-color: rgba(251, 191, 36, 0.45); }
+.aviso-par { margin-top: 8px; font-size: 12.5px; line-height: 1.35; color: var(--ambar); }
+.aviso-par b { color: #fff; }

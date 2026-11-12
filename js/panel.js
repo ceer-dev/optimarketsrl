@@ -11,7 +11,10 @@
  * Stock: NO se muestra (el del sistema no siempre está al día, decisión del dueño 2026-10-08). Se puede pedir toda medida
  *   que exista en el catálogo; OPTIMARKET confirma la disponibilidad al recibir el pedido.
  * Datos: carpeta catalogo/ (la genera el ERP con scripts/exportar-catalogo-clientes.js); cada categoría se baja al abrirla.
- * Rutas (botón «atrás» del celular): #/ · #/c/<cat> · #/c/<cat>/m/<sub> (medidas) · #/c/<cat>/s/<sub> (productos)
+ * Tabla de precios (2026-11-11): en lentes, tocar la subcategoría abre primero sus PRECIOS POR RANGOS a la vista
+ *   (js/tabla-precios.js: Esférico, Cilindro, Combinados / Esfera × ADD / Base × ADD, solo precio con factura: Lentilla ½ par y 1 par; Material Listo y Block 1 par) con las fotos
+ *   de la subcategoría; «Hacer pedido» abre la ventana de medida de siempre.
+ * Rutas (botón «atrás» del celular): #/ · #/c/<cat> · #/c/<cat>/t/<sub> (tabla de precios) · #/c/<cat>/m/<sub> (medidas) · #/c/<cat>/s/<sub> (productos)
  *   · #/c/<cat>/s/<sub>/p/<id> (cantidad) · #/pedido
  * Pensado para Android 11: JavaScript simple (sin sintaxis nueva), imágenes livianas que cargan al verse.
  * --------------------------------------------------------------------------------------------
@@ -66,8 +69,12 @@
     if (c.indexOf("lentilla") >= 0 || c.indexOf("lentes de contacto") >= 0) return "lentilla";
     return null;   // producto directo
   }
+  // Material Listo y Block se venden SIEMPRE por PAR: cantidad 1 = 1 par (los 2 lentes) y el precio es el del par.
+  // Lentilla: cantidad 1 = ½ par (un lente). (Confusión real 2026-11-12: un cliente puso 2 creyendo que era un par.)
+  function vendePorPar(tipo) { return tipo === "materiallisto" || tipo === "block"; }
   function textoUnidad(qty, tipo) {
     if (!tipo) return qty + (qty === 1 ? " unid." : " unids.");
+    if (vendePorPar(tipo)) return qty + (qty === 1 ? " par" : " pares");
     if (qty === 1) return "½ par";
     var pares = Math.floor(qty / 2); var medio = qty % 2 ? " ½" : "";
     return pares + medio + (pares === 1 && !medio ? " par" : " pares");
@@ -139,8 +146,9 @@
     document.getElementById("barraCantidad").textContent = t.lineas + (t.lineas === 1 ? " producto" : " productos") + (t.consultar ? " · " + t.consultar + " a consultar" : "");
     document.getElementById("barraTotal").textContent = bs(t.total);
   }
-  function sumarAlPedido(item, cantidad) {
-    var actual = pedido[item.id] ? pedido[item.id].qty : 0;
+  // reemplazar = true (Material Listo / Block): la medida queda con la cantidad elegida, no se suma a lo que ya había
+  function sumarAlPedido(item, cantidad, reemplazar) {
+    var actual = pedido[item.id] && !reemplazar ? pedido[item.id].qty : 0;
     pedido[item.id] = { id: item.id, cat: item.cat, catSlug: item.catSlug, sub: item.sub, subId: item.subId, medida: item.medida, cf: item.cf, tipo: item.tipo || null, qty: Math.min(999, actual + cantidad) };
     guardarPedido(); pintarBarra();
   }
@@ -405,19 +413,19 @@
 
   function tarjetaSub(cat, s, conCategoria) {
     var n = enPedidoDeSub(s.id); var optico = tipoOptico(cat);
-    var destino = "#/c/" + esc(cat.slug) + (optico ? "/m/" : "/s/") + s.id;
+    var destino = "#/c/" + esc(cat.slug) + (optico ? "/t/" : "/s/") + s.id;
     return '<a class="tarjeta-sub" href="' + destino + '"><div class="foto">' + img(s.imagen, s.nombre) + "</div>" +
       '<div class="info">' + (conCategoria ? '<span class="cat-mini">' + esc(cat.nombre) + "</span>" : "") +
       '<span class="nombre">' + esc(s.nombre) + "</span>" + precioTarjeta(s.desde, s.medidas > 1 ? "desde" : "") +
       '<span class="stock" hidden></span>' +
-      '<span class="accion-tarjeta">' + (optico ? "Elegir medida" : "Ver productos") + " ›</span>" +
+      '<span class="accion-tarjeta">' + (optico ? "Ver precios" : "Ver productos") + " ›</span>" +
       (n ? '<span class="elegidos">' + n + " en tu pedido</span>" : "") + "</div></a>";
   }
 
   function vistaCategoria(cat) {
     vista.innerHTML = '<div class="encabezado-vista"><a class="volver" href="#/">← Inicio</a><div class="textos">' +
       '<h1 class="titulo">' + esc(cat.nombre) + '</h1><p class="subtitulo">' + cat.subcategorias.length + " productos · " +
-      (tipoOptico(cat) ? "toca uno para escribir la medida" : "toca uno para ver sus modelos") + "</p></div></div>" +
+      (tipoOptico(cat) ? "toca uno para ver sus precios" : "toca uno para ver sus modelos") + "</p></div></div>" +
       pastillasCategorias(cat.slug) +
       '<label class="buscador">' + ICONO_BUSCAR + '<input id="buscarSub" type="search" placeholder="Buscar en ' + esc(cat.nombre) +
       (tipoOptico(cat) ? " (nombre o medida)" : "") + '…" autocomplete="off" aria-label="Buscar producto"></label>' +
@@ -441,6 +449,79 @@
     document.getElementById("buscarSub").addEventListener("input", function (e) { pintar(e.target.value); });
     var activa = vista.querySelector('.pastillas [aria-pressed="true"]');
     if (activa && activa.scrollIntoView) activa.scrollIntoView({ block: "nearest", inline: "center" });
+  }
+
+  // ------------------------------------------------------------------ tabla de precios (lentes)
+  // Solo el precio FACTURADO (decisión del dueño 2026-11-12), con la unidad a la vista:
+  //   Lentilla: «½ par» (1 lente, el precio del catálogo) y «1 par» (×2). Material Listo y Block: «1 par».
+  var columnasPrecio = [];
+  function columnasDe(tipo) {
+    return vendePorPar(tipo) ? [{ veces: 1, u: "1 par" }] : [{ veces: 1, u: "½ par" }, { veces: 2, u: "1 par" }];
+  }
+  function montoPrecio(v) { return Math.round(v * 100) % 100 ? v.toFixed(2) : v.toFixed(0); }
+  function celdaPrecio(cf, veces) {
+    if (cf == null) return '<td class="tp-precio tp-vacio">–</td>';
+    return '<td class="tp-precio"><b>' + montoPrecio(cf * veces) + "</b><small>Bs</small></td>";
+  }
+  function textoRango(r) { return r.desde === r.hasta ? esc(r.desde) : esc(r.desde) + " <span>hasta</span> " + esc(r.hasta); }
+  function cabeceraPrecios() {
+    return columnasPrecio.map(function (c) { return '<th class="tp-col">Precio<small>' + c.u + "</small></th>"; }).join("");
+  }
+  function preciosDe(cf) { return columnasPrecio.map(function (c) { return celdaPrecio(cf, c.veces); }).join(""); }
+  function htmlSeccion(sec) {
+    if (sec.tipo === "lista") {
+      return '<section class="tp-caja"><h2 class="tp-pildora">' + esc(sec.titulo) + '</h2><div class="tp-scroll"><table class="tp-tabla">' +
+        '<thead><tr><th class="tp-rango-titulo">Rango</th>' + cabeceraPrecios() + "</tr></thead><tbody>" +
+        sec.rangos.map(function (r) { return '<tr><td class="tp-rango">' + textoRango(r) + "</td>" + preciosDe(r.cf) + "</tr>"; }).join("") +
+        "</tbody></table></div></section>";
+    }
+    var n = columnasPrecio.length;
+    return '<section class="tp-caja tp-ancha"><h2 class="tp-pildora">' + esc(sec.titulo) + '</h2><div class="tp-scroll"><table class="tp-tabla tp-matriz">' +
+      '<thead><tr><th class="tp-eje" rowspan="3">' + esc(sec.filaTitulo) + '</th><th class="tp-eje-col" colspan="' + sec.columnas.length * n + '">' + esc(sec.colTitulo) + "</th></tr>" +
+      "<tr>" + sec.columnas.map(function (c) { return '<th class="tp-rango-col" colspan="' + n + '">' + textoRango(c) + "</th>"; }).join("") + "</tr>" +
+      "<tr>" + sec.columnas.map(function () { return cabeceraPrecios(); }).join("") + "</tr></thead><tbody>" +
+      sec.filas.map(function (f) {
+        return '<tr><th class="tp-rango-fila">' + textoRango(f.rango) + "</th>" + f.precios.map(function (pr) { return preciosDe(pr ? pr.cf : null); }).join("") + "</tr>";
+      }).join("") +
+      "</tbody></table></div>" +
+      (sec.excepciones && sec.excepciones.length ? '<p class="tp-nota">Medidas con precio distinto: ' + sec.excepciones.map(function (e) {
+        return "<b>" + esc(e.medida) + "</b> " + columnasPrecio.map(function (c) { return c.u + " Bs " + (e.cf == null ? "–" : montoPrecio(e.cf * c.veces)); }).join(" / ");
+      }).join(" · ") + "</p>" : "") + "</section>";
+  }
+  function vistaTabla(cat, datos, sub) {
+    var tipo = tipoOptico(cat);
+    columnasPrecio = columnasDe(tipo);
+    // Solo el precio facturado: los rangos se arman con el CF (el SF, si el catálogo lo trae, no se usa ni se muestra)
+    var secciones = window.TablaPrecios ? window.TablaPrecios.construir(tipo, datos.subcategorias[sub.id] || [], { conSF: false }) : [];
+    var palabras = String(sub.nombre).trim().split(/\s+/);
+    var arriba = palabras.length > 1 ? palabras.shift() : cat.nombre;
+    var fotos = sub.galeria && sub.galeria.length ? sub.galeria : (sub.imagen ? [{ thumb: sub.imagen, zoom: sub.zoom || sub.imagen }] : []);
+    var n = enPedidoDeSub(sub.id);
+    vista.innerHTML =
+      '<div class="tp-cabecera"><div class="tp-titulos"><span class="tp-sobretitulo">' + esc(arriba) + '</span><h1 class="tp-titulo">' + esc(palabras.join(" ")) + "</h1>" +
+      '<div class="tp-controles"><a class="volver" href="#/c/' + esc(cat.slug) + '">← Volver</a>' +
+      '<select id="tpSub" class="tp-selector" aria-label="Cambiar de material">' + cat.subcategorias.map(function (s) {
+        return '<option value="' + s.id + '"' + (s.id === sub.id ? " selected" : "") + ">" + esc(s.nombre) + "</option>";
+      }).join("") + "</select></div></div>" +
+      (fotos.length ? '<div class="tp-fotos">' + fotos.map(function (f, i) {
+        return '<button type="button" class="tp-foto" data-foto="' + i + '" aria-label="Ver foto">' + img(f.thumb, sub.nombre) + "</button>";
+      }).join("") + "</div>" : "") +
+      "</div>" +
+      '<div class="tp-acciones"><a class="boton boton-rojo" id="tpPedir" href="#/c/' + esc(cat.slug) + "/m/" + sub.id + '">🛒 Hacer pedido</a>' +
+      (n ? '<span class="elegidos">' + n + " en tu pedido</span>" : "") +
+      '<span class="tp-leyenda">Precios con factura · ' +
+      (vendePorPar(tipo) ? "<b>se vende por PAR</b> (1 par = los 2 lentes)" : "<b>½ par</b> = 1 lente · <b>1 par</b> = 2 lentes") + "</span></div>" +
+      (secciones.length ? '<div class="tp-secciones">' + secciones.map(htmlSeccion).join("") + "</div>"
+        : '<p class="vacio">Este material todavía no tiene precios cargados. Pídelo por WhatsApp y te cotizamos.</p>');
+    document.getElementById("tpSub").addEventListener("change", function (e) { location.hash = "#/c/" + cat.slug + "/t/" + e.target.value; });
+    document.getElementById("tpPedir").addEventListener("click", function () { regresoVentana = location.hash; });
+    vista.querySelectorAll("[data-foto]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var f = fotos[Number(b.getAttribute("data-foto"))];
+        abrirVentana('<div class="ventana tp-ventana-foto"><button type="button" class="boton-icono tp-cerrar-foto" data-cerrar aria-label="Cerrar">✕</button>' +
+          img(f.zoom || f.thumb, sub.nombre) + "</div>", location.hash);
+      });
+    });
   }
 
   // Productos directos de una subcategoría (monturas, accesorios…): tarjeta por producto
@@ -504,18 +585,20 @@
       campos = '<label class="campo-medida"><span>Medida</span><input id="fMedida" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" placeholder="Ej: +2.50-0.25, -1.50, cil -0.25"></label>';
     }
 
+    var porPar = vendePorPar(tipo);
     var capa = abrirVentana(
       '<header class="ventana-cabecera">' + img(sub.imagen, sub.nombre, "ventana-foto") +
-      '<div class="textos"><h2>' + esc(sub.nombre) + "</h2><span>" + esc(cat.nombre) + " · Medida y cantidad</span></div>" +
+      '<div class="textos"><h2>' + esc(sub.nombre) + "</h2><span>" + esc(cat.nombre) + (porPar ? " · se vende por par" : " · Medida y cantidad") + "</span></div>" +
       '<button type="button" class="ventana-x" data-cerrar aria-label="Cerrar">✕</button></header>' +
       '<div class="ventana-cuerpo">' +
       '<div id="agregado" class="agregado" role="status" hidden></div>' +
       '<div class="bloque"><span class="etiqueta">Medida / graduación</span>' + campos +
       '<div id="sugerencias" class="sugerencias" aria-label="Medidas sugeridas"></div>' +
       '<p id="estado" class="estado-medida" role="status" hidden></p></div>' +
-      '<div class="bloque fila"><span class="etiqueta">Precio facturado</span><strong id="precio" class="mono">--</strong></div>' +
-      '<div class="bloque fila"><span class="etiqueta">Cantidad</span><div class="contador-cant grande"><button type="button" id="cMenos" aria-label="Quitar uno">−</button>' +
-      '<input id="cNum" class="num" inputmode="numeric" value="1" aria-label="Cantidad"><button type="button" id="cMas" aria-label="Agregar uno">+</button></div></div>' +
+      '<div class="bloque fila"><span class="etiqueta">' + (porPar ? "Precio del PAR (facturado)" : "Precio facturado") + '</span><strong id="precio" class="mono">--</strong></div>' +
+      '<div class="bloque' + (porPar ? " bloque-par" : "") + '"><div class="fila"><span class="etiqueta">' + (porPar ? "Cantidad de PARES" : "Cantidad") + '</span><div class="contador-cant grande"><button type="button" id="cMenos" aria-label="Quitar uno">−</button>' +
+      '<input id="cNum" class="num" inputmode="numeric" value="1" aria-label="' + (porPar ? "Cantidad de pares" : "Cantidad") + '"><button type="button" id="cMas" aria-label="Agregar uno">+</button></div></div>' +
+      (porPar ? '<p class="aviso-par"><b>1 = 1 PAR</b> (los 2 lentes). Para un par deja <b>1</b>; pon 2 solo si quieres 2 pares.</p>' : "") + "</div>" +
       '<div class="bloque fila resumen"><span><span class="etiqueta">Subtotal</span> <small id="unidad" class="tenue"></small></span><strong id="subtotal" class="mono verde">--</strong></div>' +
       "</div>" +
       '<footer class="ventana-pie"><button type="button" class="boton boton-gris-chico" data-cerrar id="btnCerrar">Cancelar</button>' +
@@ -567,7 +650,11 @@
       resuelta = porClave[claveMedida(medidaEscrita(tipo, c))] || null;
       sugerir(c);
       if (!resuelta) { mostrarEstado("ambar", $("sugerencias").children.length ? "" : "Esta medida no existe en este producto"); $("precio").textContent = "--"; }
-      else { mostrarEstado("", ""); $("precio").textContent = bs(resuelta[2]); }
+      else {
+        var ya = porPar && pedido[resuelta[0]] ? pedido[resuelta[0]].qty : 0;
+        mostrarEstado(ya ? "ambar" : "", ya ? "Ya tienes " + textoUnidad(ya, tipo) + " de esta medida en tu pedido. Si agregas, queda la cantidad que elijas abajo (no se suma)." : "");
+        $("precio").textContent = bs(resuelta[2]);
+      }
       pintarResumen();
     }
     function vaciarCampos() { entradas.forEach(function (e) { e.value = ""; }); cantidad = 1; resolver(); if (entradas[0]) entradas[0].focus(); }
@@ -589,12 +676,17 @@
     $("cMenos").addEventListener("click", function () { if (cantidad > 1) { cantidad--; pintarResumen(); } });
     $("cMas").addEventListener("click", function () { if (cantidad < 999) { cantidad++; pintarResumen(); } });
     $("cNum").addEventListener("input", function () { var n = parseInt($("cNum").value.replace(/\D/g, ""), 10); cantidad = isNaN(n) || n < 1 ? 1 : Math.min(999, n); $("unidad").textContent = resuelta ? "(" + textoUnidad(cantidad, tipo) + ")" : ""; $("subtotal").textContent = resuelta && resuelta[2] != null ? bs(resuelta[2] * cantidad) : "--"; });
+    var agregando = false;   // un doble toque (o Enter + toque) agrega una sola vez
     $("btnAgregar").addEventListener("click", function () {
-      if (!resuelta) return;
-      sumarAlPedido({ id: resuelta[0], cat: cat.nombre, catSlug: cat.slug, sub: sub.nombre, subId: sub.id, medida: resuelta[1], cf: resuelta[2], tipo: tipo }, cantidad);
-      agregados += cantidad;
+      if (!resuelta || agregando) return;
+      agregando = true; setTimeout(function () { agregando = false; }, 900);
+      var habia = porPar && pedido[resuelta[0]] ? pedido[resuelta[0]].qty : 0;
+      sumarAlPedido({ id: resuelta[0], cat: cat.nombre, catSlug: cat.slug, sub: sub.nombre, subId: sub.id, medida: resuelta[1], cf: resuelta[2], tipo: tipo }, cantidad, porPar);
+      agregados += porPar ? cantidad - habia : cantidad;
       var ag = $("agregado");
-      ag.innerHTML = "<b>✓ Agregado:</b> <span class=\"mono\">" + esc(resuelta[1]) + " × " + cantidad + "</span><span>" + agregados + " en total · escribe otra medida</span>";
+      ag.innerHTML = porPar
+        ? "<b>✓ " + (habia ? "Actualizado" : "Agregado") + ":</b> <span class=\"mono\">" + esc(resuelta[1]) + " — " + textoUnidad(cantidad, tipo) + " = " + bs(resuelta[2] != null ? resuelta[2] * cantidad : null) + "</span><span>escribe otra medida o toca «Listo, cerrar»</span>"
+        : "<b>✓ Agregado:</b> <span class=\"mono\">" + esc(resuelta[1]) + " × " + cantidad + "</span><span>" + agregados + " en total · escribe otra medida</span>";
       ag.hidden = false;
       $("btnCerrar").textContent = "Listo, cerrar";
       vaciarCampos();   // la ventana sigue abierta para la siguiente medida
@@ -674,7 +766,7 @@
       html += '<div class="grupo-pedido"><h3><a href="' + ruta + '">' + esc(k) + " ›</a></h3>";
       g.sort(function (a, b) { return a.medida.localeCompare(b.medida, "es", { numeric: true }); }).forEach(function (p) {
         html += '<div class="item-pedido" data-id="' + p.id + '"><div><div class="medida">' + esc(p.medida) + "</div>" +
-          '<div class="linea">' + textoUnidad(p.qty, p.tipo) + " · " + bs(p.cf) + (p.cf != null ? " c/u = <b>" + bs(p.cf * p.qty) + "</b>" : "") + "</div></div>" +
+          '<div class="linea">' + textoUnidad(p.qty, p.tipo) + " · " + bs(p.cf) + (p.cf != null ? (vendePorPar(p.tipo) ? " el par" : " c/u") + " = <b>" + bs(p.cf * p.qty) + "</b>" : "") + "</div></div>" +
           '<div class="contador-cant"><button type="button" class="menos" data-accion="menos" aria-label="Quitar uno">−</button><span class="num activo">' + p.qty + "</span>" +
           '<button type="button" data-accion="mas" aria-label="Agregar uno">+</button></div></div>';
       });
@@ -709,8 +801,10 @@
     Object.keys(grupos).sort().forEach(function (sub) {
       mensaje += "*" + sub + "*\n";
       grupos[sub].forEach(function (p) {
-        mensaje += "• " + p.medida + " — " + textoUnidad(p.qty, p.tipo) + " (" + p.qty + ")" + (p.cf != null ? " × " + bs(p.cf) : " — precio a consultar") + "\n";
-        lineas.push(sub + " | " + p.medida + " | Cant: " + p.qty + " | P.U: " + (p.cf != null ? p.cf : "consultar"));
+        var par = vendePorPar(p.tipo);
+        mensaje += "• " + p.medida + " — " + textoUnidad(p.qty, p.tipo) + (par ? "" : " (" + p.qty + ")") +
+          (p.cf != null ? " × " + bs(p.cf) + (par ? " el par" : "") : " — precio a consultar") + "\n";
+        lineas.push(sub + " | " + p.medida + " | Cant: " + (par ? textoUnidad(p.qty, p.tipo) : p.qty) + " | P.U" + (par ? " (par)" : "") + ": " + (p.cf != null ? p.cf : "consultar"));
       });
       mensaje += "\n";
     });
@@ -742,8 +836,14 @@
       if (!cat) { location.replace("#/"); return; }
       var sub = p[3] ? subDe(cat, p[3]) : null;
       // Grilla de fondo: categoría (para «m/») o productos de la subcategoría (para «s/»)
+      if (p[2] === "t" && sub) {
+        // Al cerrar «Hacer pedido» o una foto se vuelve a la misma tabla: se deja donde estaba (sin subir al inicio)
+        if (vistaPintada === "t/" + cat.slug + "/" + sub.id && document.getElementById("tpSub")) { cerrarVentana(); return "igual"; }
+        return asegurarCategoria(cat).then(function (d) { cerrarVentana(true); vistaTabla(cat, d, sub); vistaPintada = "t/" + cat.slug + "/" + sub.id; });
+      }
       if (p[2] === "m" && sub) {
-        if (vistaPintada !== "c/" + cat.slug) { vistaCategoria(cat); vistaPintada = "c/" + cat.slug; }
+        // Fondo: la tabla de precios si se viene de ahí; si no, la categoría
+        if (vistaPintada !== "c/" + cat.slug && vistaPintada !== "t/" + cat.slug + "/" + sub.id) { vistaCategoria(cat); vistaPintada = "c/" + cat.slug; }
         return asegurarCategoria(cat).then(function (d) { ventanaMedidas(cat, d, sub); });
       }
       if (p[2] === "s" && sub) {
