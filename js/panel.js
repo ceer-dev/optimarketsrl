@@ -14,6 +14,8 @@
  * Tabla de precios (2026-11-11): en lentes, tocar la subcategoría abre primero sus PRECIOS POR RANGOS a la vista
  *   (js/tabla-precios.js: Esférico, Cilindro, Combinados / Esfera × ADD / Base × ADD, precio con la unidad: Lentilla ½ par y 1 par; Material Listo y Block 1 par) con las fotos
  *   de la subcategoría; «Hacer pedido» abre la ventana de medida de siempre.
+ * Reloj y horario (2026-11-12, js/horario.js): hora de Bolivia en la cabecera con «Abierto / Cerrado»; al enviar el pedido
+ *   fuera de horario, aviso con la próxima apertura y opción de enviarlo igual (se atiende al abrir).
  * Rutas (botón «atrás» del celular): #/ · #/c/<cat> · #/c/<cat>/t/<sub> (tabla de precios) · #/c/<cat>/m/<sub> (medidas) · #/c/<cat>/s/<sub> (productos)
  *   · #/c/<cat>/s/<sub>/p/<id> (cantidad) · #/pedido
  * Pensado para Android 11: JavaScript simple (sin sintaxis nueva), imágenes livianas que cargan al verse.
@@ -928,10 +930,31 @@
       if (!confirm("¿Vaciar todo el pedido?")) return;
       pedido = {}; guardarPedido(); pintarBarra(); vistaPedido();
     });
-    document.getElementById("enviarPedido").addEventListener("click", enviarPedido);
+    document.getElementById("enviarPedido").addEventListener("click", function () {
+      var e = window.HorarioOptimarket ? window.HorarioOptimarket.estado() : null;
+      if (!e || e.abierto) { enviarPedido(null); return; }
+      avisoFueraDeHorario(e);
+    });
   }
 
-  function enviarPedido() {
+  /** Pedido fuera de horario: se avisa y se puede enviar igual (se atiende en la próxima apertura). */
+  function avisoFueraDeHorario(e) {
+    var cuando = e.proxima ? e.proxima.texto : "en nuestro próximo horario de atención";
+    var capa = abrirVentana(
+      '<header class="ventana-cabecera"><div class="textos"><h2>' + (e.enPausa ? "☕ Estamos en pausa de mediodía" : "🌙 Estamos fuera de horario") + "</h2>" +
+      "<span>Ahora son las " + e.ahora.texto + " (hora de Bolivia)</span></div>" +
+      '<button type="button" class="ventana-x" data-cerrar aria-label="Cerrar">✕</button></header>' +
+      '<div class="ventana-cuerpo"><p class="aviso-sin-precio">Puedes enviar tu pedido igual: <b>lo recibimos y lo atendemos ' + esc(cuando) + "</b>.</p>" +
+      '<div class="bloque horario-lista"><span class="etiqueta">Nuestro horario</span>' +
+      "<p><b>Lunes a viernes</b><br>Mañana: 8:30 – 12:30 · Tarde: 14:00 – 19:00</p><p><b>Sábados</b><br>8:30 – 13:00</p><p class=\"tenue\">Domingos y feriados: cerrado</p></div></div>" +
+      '<footer class="ventana-pie"><button type="button" class="boton boton-gris-chico" data-cerrar>Cancelar</button>' +
+      '<button type="button" class="boton boton-verde" id="enviarIgual">Enviar igual</button></footer>', location.hash);
+    capa.querySelector("#enviarIgual").addEventListener("click", function () {
+      cerrarVentana();
+      enviarPedido("⏰ Pedido enviado fuera de horario (" + e.ahora.texto + "). Atender " + cuando + ".");
+    });
+  }
+  function enviarPedido(notaHorario) {
     var t = totales();
     var pago = (document.querySelector('input[name="pago"]:checked') || {}).value || "NO DEFINIDO";
     var optica = (cliente.optica || "ÓPTICA").toUpperCase();
@@ -949,12 +972,13 @@
       });
       mensaje += "\n";
     });
-    mensaje += "Total: " + bs(t.total) + (t.consultar ? " (+ " + t.consultar + " a consultar)" : "") + "\nPago: " + pago + "\nGracias.";
+    mensaje += "Total: " + bs(t.total) + (t.consultar ? " (+ " + t.consultar + " a consultar)" : "") + "\nPago: " + pago +
+      (notaHorario ? "\n" + notaHorario : "") + "\nGracias.";
     // 1) WhatsApp de inmediato (abrirlo dentro del toque evita que el celular lo bloquee)
     window.open("https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(mensaje), "_blank");
     // 2) Registro del pedido en Netlify Forms, en segundo plano
     var datos = new URLSearchParams({ "form-name": "pedidos", optica: optica, celular: cliente.phone || "", detalles: lineas.join("\n"),
-      metodo_pago: pago, total: bs(t.total), fecha_hora: new Date().toLocaleString("es-BO") });
+      metodo_pago: pago, total: bs(t.total), fecha_hora: horaBolivia() + (notaHorario ? " (fuera de horario)" : "") });
     fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: datos.toString() }).catch(function () {});
     pedido = {}; guardarPedido(); pintarBarra();
     aviso("Pedido enviado. Gracias.");
@@ -1003,6 +1027,35 @@
   }
 
   document.getElementById("nombreOptica").textContent = cliente.optica || "";
+  function horaBolivia() {
+    if (!window.HorarioOptimarket) return new Date().toLocaleString("es-BO");
+    var a = window.HorarioOptimarket.ahora();
+    return (a.fecha < 10 ? "0" : "") + a.fecha + "/" + (a.mes < 10 ? "0" : "") + a.mes + "/" + a.anio + " " + a.textoSeg;
+  }
+  // Reloj (hora de Bolivia) + estado de atención, cada segundo
+  (function iniciarReloj() {
+    var el = document.getElementById("relojHorario");
+    if (!el || !window.HorarioOptimarket) return;
+    var H = window.HorarioOptimarket; var ultimoEstado = "";
+    function pintarReloj() {
+      var e = H.estado(); var a = e.ahora;
+      var clase = e.abierto ? (e.cierraPronto ? "pronto" : "abierto") : (e.enPausa ? "pausa" : "cerrado");
+      var texto = e.abierto ? (e.cierraPronto ? "Cierra pronto · " + e.cierra : "Abierto · cierra " + e.cierra)
+        : (e.enPausa ? "Pausa · vuelve " : "Cerrado · abre ") + (e.proxima ? e.proxima.texto.replace(/^hoy a las /, "").replace(/ a las /, " ") : "");
+      var clave = clase + texto;
+      if (clave !== ultimoEstado) {
+        el.innerHTML = '<span class="reloj-hora mono" id="relojHora"></span><span class="reloj-estado ' + clase + '"><i></i>' + esc(texto) + "</span>";
+        el.title = "Hora de Bolivia. Horario: " + H.texto;
+        ultimoEstado = clave;
+      }
+      document.getElementById("relojHora").textContent = a.textoSeg;
+    }
+    pintarReloj();
+    setInterval(pintarReloj, 1000);
+    // Alto de la cabecera (con el reloj) para lo que queda fijo debajo de ella
+    function medir() { var c = document.querySelector(".cabecera"); if (c) document.documentElement.style.setProperty("--alto-cabecera", c.offsetHeight + "px"); }
+    medir(); window.addEventListener("resize", medir);
+  })();
   document.getElementById("botonSalir").addEventListener("click", function () {
     if (!confirm("¿Cerrar sesión en este dispositivo?")) return;
     try { localStorage.removeItem("registeredClient"); localStorage.removeItem(CLAVE_PEDIDO); } catch (_) {}

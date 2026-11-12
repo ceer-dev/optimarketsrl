@@ -384,7 +384,7 @@ body.sin-barra .boton-asistente { bottom: calc(16px + env(safe-area-inset-bottom
 .tp-selector { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--borde); background: var(--superficie); color: var(--texto); font: inherit; font-weight: 700; font-size: 15px; }
 .tp-leyenda { font-size: 13px; color: var(--secundario); margin-bottom: 10px; }
 .tp-leyenda b { color: var(--texto); }
-.tp-indice { position: sticky; top: 56px; z-index: 5; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 0; margin: 0 -14px 6px; padding-left: 14px; padding-right: 14px; background: linear-gradient(var(--fondo) 80%, transparent); }
+.tp-indice { position: sticky; top: var(--alto-cabecera, 56px); z-index: 5; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 8px 0; margin: 0 -14px 6px; padding-left: 14px; padding-right: 14px; background: linear-gradient(var(--fondo) 80%, transparent); }
 .tp-indice::-webkit-scrollbar { display: none; }
 .tp-indice .chip { flex: none; }
 .tp-secciones { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
@@ -480,3 +480,21 @@ body.sin-barra .boton-asistente { bottom: calc(16px + env(safe-area-inset-bottom
 .tarjeta-producto .cuenta-pres { font-size: 12.5px; font-weight: 800; color: var(--texto); font-family: 'JetBrains Mono', ui-monospace, monospace; line-height: 1.3; }
 .item-pedido .linea.tenue { color: var(--tenue); font-size: 11.5px; }
 .tarjeta-producto .cuenta-pres b { font-size: 15px; color: #fff; white-space: nowrap; }
+
+/* ---------- Reloj (hora de Bolivia) y estado de atención — js/horario.js ---------- */
+.cabecera { flex-wrap: wrap; row-gap: 6px; }
+.reloj-horario { order: 10; flex: 1 0 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px; border-top: 1px solid var(--borde-suave); }
+.reloj-horario:empty { display: none; }
+.reloj-hora { font-size: 20px; font-weight: 700; letter-spacing: 0.04em; color: #fff; line-height: 1; }
+.reloj-estado { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reloj-estado i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.reloj-estado.abierto { color: var(--verde); }
+.reloj-estado.pronto { color: var(--ambar); }
+.reloj-estado.pausa { color: var(--ambar); }
+.reloj-estado.cerrado { color: #f87171; }
+.horario-lista p { font-size: 13.5px; margin-top: 6px; }
+.horario-lista .tenue { color: var(--tenue); }
+@media (min-width: 720px) {
+  .reloj-horario { order: 1; flex: none; border-top: 0; padding-top: 0; gap: 14px; padding: 0 6px; }
+  .cabecera .boton-carrito, .cabecera .boton-icono { order: 2; }
+}

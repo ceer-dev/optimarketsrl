@@ -310,7 +310,11 @@
     var medida = extraerMedida(frase);
     var preguntaStock = /\b(stock|hay|tienen|tienes|disponib\w*|queda|quedan)\b/.test(t);
     if (!medida) {
-      if (/horario|atienden|atencion|abren|cierran|a que hora/.test(t)) return Promise.resolve("<p>Nuestro horario de atención:</p><p><b>" + HORARIO + "</b></p>");
+      if (/horario|atienden|atencion|abren|abierto|abiertos|cierran|cerrado|a que hora|que hora/.test(t)) {
+        return Promise.resolve((window.HorarioOptimarket ? "<p>" + esc(window.HorarioOptimarket.frase()) + "</p>" : "") +
+          "<p>Nuestro horario de atención:</p><p><b>" + HORARIO + "</b></p>" +
+          '<p class="as-nota">Fuera de horario igual puedes enviar tu pedido: lo atendemos en cuanto abrimos.</p>');
+      }
       if (/\b(pago|pagos|pagar|qr|efectivo|transferencia|deposito)\b/.test(t)) {
         return Promise.resolve("<p>Puedes pagar con <b>QR</b> o en <b>efectivo</b>. Lo eliges al enviar tu pedido (en «Mi pedido»).</p>");
       }
