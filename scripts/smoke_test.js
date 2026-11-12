@@ -93,7 +93,7 @@ async function runTest() {
 
     // 3) Tabla de precios por rangos (js/tabla-precios.js) y, desde ahí, «Hacer pedido»
     await page.click('#grillaSub .tarjeta-sub');
-    await page.waitForSelector('.tp-caja .tp-tabla', { timeout: 10000 });
+    await page.waitForSelector('.tp-sec .tp-box .tp-monto', { timeout: 10000 });
     console.log('[OK] Price table by ranges visible.');
     await page.click('#tpPedir');
 

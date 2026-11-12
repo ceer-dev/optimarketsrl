@@ -18,7 +18,7 @@
 
   var HORARIO = "Lunes a viernes: 8:30–12:30 y 14:00–19:00 · Sábado: 8:30–13:00";
   var MAX_LINEAS = 8;
-  var NOTA_PRECIOS = "Precios facturados. La disponibilidad la confirma OPTIMARKET al recibir tu pedido.";
+  var NOTA_PRECIOS = "La disponibilidad la confirma OPTIMARKET al recibir tu pedido.";
   // Palabras que no ayudan a encontrar el producto
   var VACIAS = ("a al algo alguna alguno amigo buen buena buenas buenos busco busca cuanto cuesta cuestan costo costaria cotizar cotizacion " +
     "de del dime decirme el en es esa ese eso esta este esto estos estas favor hay hola la las le lo los me medida medidas mi mis " +
@@ -227,7 +227,7 @@
       if (hay.length > MAX_LINEAS) html += '<p class="as-nota">… y ' + (hay.length - MAX_LINEAS) + " materiales más. Dime cuál buscas (ej. «blue cut»).</p>";
       if (no.length && delTipo.length) html += '<p class="as-nota">Sin esta medida: ' + no.map(function (x) { return esc(x.sub.nombre); }).join(", ") + ".</p>";
       if (!delTipo.length && hay.length > 1) html += "<p>¿Cuál material quieres? Toca «Agregar» o escríbeme el nombre (ej. <span class=\"mono\">" + esc(medida.texto) + " blanco</span>).</p>";
-      html += '<p class="as-nota">' + (preguntaStock ? "Precios facturados. Sobre el stock: no te lo puedo asegurar desde aquí; te lo confirmamos al recibir tu pedido." : NOTA_PRECIOS) + "</p>";
+      html += '<p class="as-nota">' + (preguntaStock ? "Sobre el stock: no te lo puedo asegurar desde aquí; te lo confirmamos al recibir tu pedido." : NOTA_PRECIOS) + "</p>";
       return html;
     });
   }
