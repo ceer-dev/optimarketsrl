@@ -458,21 +458,49 @@
       (n ? '<span class="elegidos">' + n + " en tu pedido</span>" : "") + "</div></a>";
   }
 
+  // Categorías que NO son lentes (accesorios, monturas, estuches, exhibición): al abrirla se ven TODOS sus productos,
+  // agrupados por subcategoría, sin tener que elegir una (dueño 2026-11-12). Botones arriba para filtrar por subcategoría.
   function vistaCategoria(cat) {
+    var optico = tipoOptico(cat);
+    var totalModelos = cat.subcategorias.reduce(function (n, s) { return n + (s.medidas || 0); }, 0);
     vista.innerHTML = '<div class="encabezado-vista"><a class="volver" href="#/">← Inicio</a><div class="textos">' +
-      '<h1 class="titulo">' + esc(cat.nombre) + '</h1><p class="subtitulo">' + cat.subcategorias.length + " productos · " +
-      (tipoOptico(cat) ? "toca uno para ver sus precios" : "toca uno para ver sus modelos") + "</p></div></div>" +
+      '<h1 class="titulo">' + esc(cat.nombre) + '</h1><p class="subtitulo">' +
+      (optico ? cat.subcategorias.length + " productos · toca uno para ver sus precios"
+        : totalModelos + " modelos · " + cat.subcategorias.length + (cat.subcategorias.length === 1 ? " tipo" : " tipos")) + "</p></div></div>" +
       pastillasCategorias(cat.slug) +
+      (!optico && cat.subcategorias.length > 1 ? '<nav class="tp-hermanos" id="filtroSub" aria-label="Filtrar por tipo">' +
+        '<button type="button" class="chip" data-filtro="" aria-pressed="true">Todos</button>' + cat.subcategorias.map(function (s) {
+          return '<button type="button" class="chip" data-filtro="' + s.id + '" aria-pressed="false">' + esc(s.nombre) + "</button>";
+        }).join("") + "</nav>" : "") +
       '<label class="buscador">' + ICONO_BUSCAR + '<input id="buscarSub" type="search" placeholder="Buscar en ' + esc(cat.nombre) +
-      (tipoOptico(cat) ? " (nombre o medida)" : "") + '…" autocomplete="off" aria-label="Buscar producto"></label>' +
-      '<div id="medidaSub"></div><div class="grilla-subcategorias" id="grillaSub"></div>';
+      (optico ? " (nombre o medida)" : " (código o modelo)") + '…" autocomplete="off" aria-label="Buscar producto"></label>' +
+      '<div id="medidaSub"></div><div class="' + (optico ? "grilla-subcategorias" : "grupos-productos") + '" id="grillaSub"></div>';
     var grilla = document.getElementById("grillaSub"); var porMedida = document.getElementById("medidaSub");
+    var datosCat = optico ? null : categorias[cat.slug] || null;
+    var filtroSub = 0; var textoActual = "";
     // Una medida escrita aquí («+3,75», «+250-050») muestra su precio en cada material, igual que el buscador del inicio
     porMedida.addEventListener("click", function (e) {
       var enlace = e.target.closest("a[data-con-medida]");
       if (enlace) medidaPendiente = medidaDeBusqueda(document.getElementById("buscarSub").value);
     });
+    function pintarTodos(filtro) {
+      if (!datosCat) { grilla.innerHTML = '<div class="cargando"><span class="girando"></span> Cargando productos…</div>'; return; }
+      var f = normalizar(String(filtro || "").trim()); var html = "";
+      cat.subcategorias.forEach(function (s) {
+        if (filtroSub && s.id !== filtroSub) return;
+        var subCoincide = !f || normalizar(s.nombre).indexOf(f) >= 0;
+        var filas = (datosCat.subcategorias[s.id] || []).filter(function (r) {
+          return subCoincide || normalizar(r[1] + " " + (aliasDeModelo(s, r) || "")).indexOf(f) >= 0;
+        });
+        if (!filas.length) return;
+        html += '<section class="grupo-productos"><h2 class="grupo-productos-titulo">' + esc(s.nombre) + " <span>" + filas.length + "</span></h2>" +
+          '<div class="grilla-subcategorias">' + filas.map(function (r) { return tarjetaProducto(cat, s, r, null); }).join("") + "</div></section>";
+      });
+      grilla.innerHTML = html || '<p class="vacio">No hay modelos con ese nombre.</p>';
+    }
     function pintar(filtro) {
+      textoActual = filtro;
+      if (!optico) { pintarTodos(filtro); return; }
       var medida = tipoOptico(cat) ? medidaDeBusqueda(filtro) : null;
       grilla.hidden = !!medida;
       if (medida) { resultadosMedida(medida, porMedida, cat); return; }
@@ -483,6 +511,24 @@
     }
     pintar("");
     document.getElementById("buscarSub").addEventListener("input", function (e) { pintar(e.target.value); });
+    if (!optico) {
+      if (!datosCat) asegurarCategoria(cat).then(function (d) { datosCat = d; pintar(textoActual); }).catch(function () {
+        grilla.innerHTML = '<p class="vacio">No se pudieron cargar los productos. Revisa tu conexión.</p>';
+      });
+      var filtros = document.getElementById("filtroSub");
+      if (filtros) filtros.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-filtro]"); if (!b) return;
+        filtroSub = Number(b.getAttribute("data-filtro")) || 0;
+        filtros.querySelectorAll("[data-filtro]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        pintar(textoActual);
+      });
+      // «+ Agregar»: ventana de cantidad encima; al cerrarla se queda en esta misma lista
+      grilla.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-agregar]"); if (!b || !datosCat) return;
+        var s = subDe(cat, b.getAttribute("data-sub"));
+        if (s) ventanaCantidad(cat, datosCat, s, b.getAttribute("data-agregar"), location.hash, function () { pintar(textoActual); });
+      });
+    }
     var activa = vista.querySelector('.pastillas [aria-pressed="true"]');
     if (activa && activa.scrollIntoView) activa.scrollIntoView({ block: "nearest", inline: "center" });
   }
