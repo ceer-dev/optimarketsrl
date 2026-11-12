@@ -16,6 +16,8 @@
  *   de la subcategoría; «Hacer pedido» abre la ventana de medida de siempre.
  * Reloj y horario (2026-11-12, js/horario.js): hora de Bolivia en la cabecera con «Abierto / Cerrado»; al enviar el pedido
  *   fuera de horario, aviso con la próxima apertura y opción de enviarlo igual (se atiende al abrir).
+ * Visor de fotos (2026-11-12, js/visor.js): tocar la foto de un producto la abre a pantalla completa con zoom, sus vistas
+ *   extra (catalogo fotos: { id: [url…] }), precio, «+ Agregar» y flechas para pasar al siguiente modelo de la lista.
  * Rutas (botón «atrás» del celular): #/ · #/c/<cat> · #/c/<cat>/t/<sub> (tabla de precios) · #/c/<cat>/m/<sub> (medidas) · #/c/<cat>/s/<sub> (productos)
  *   · #/c/<cat>/s/<sub>/p/<id> (cantidad) · #/pedido
  * Pensado para Android 11: JavaScript simple (sin sintaxis nueva), imágenes livianas que cargan al verse.
@@ -306,7 +308,9 @@
       ? '<a class="boton boton-rojo boton-chico" href="' + href + '">+ Agregar</a>'
       : '<button type="button" class="boton boton-rojo boton-chico" data-agregar="' + r[0] + '" data-cat="' + esc(cat.slug) + '" data-sub="' + sub.id + '">+ Agregar</button>';
     var pres = presentacionDe(cat.slug, r[0]);
-    return '<div class="tarjeta-sub tarjeta-producto"><div class="foto">' + img(r[4], r[1]) + "</div>" +
+    var nFotos = categorias[cat.slug] && categorias[cat.slug].fotos && categorias[cat.slug].fotos[r[0]] ? categorias[cat.slug].fotos[r[0]].length : 0;
+    return '<div class="tarjeta-sub tarjeta-producto"><button type="button" class="foto foto-ver" data-ver="' + r[0] + '" data-cat="' + esc(cat.slug) + '" data-sub="' + sub.id + '" aria-label="Ver foto grande de ' + esc(r[1]) + '">' +
+      img(r[4], r[1]) + '<span class="lupa-foto" aria-hidden="true">🔍' + (nFotos > 1 ? " " + nFotos : "") + "</span></button>" +
       '<div class="info"><span class="nombre mono">' + esc(r[1]) + "</span>" +
       (pres ? '<span class="presentacion">📦 ' + tituloPres(pres) + "</span>" : "") +
       (aliasDeModelo(sub, r) ? '<span class="alias">También: ' + esc(aliasDeModelo(sub, r)) + "</span>" : "") +
@@ -690,9 +694,15 @@
     });
     vista.querySelectorAll("[data-foto]").forEach(function (b) {
       b.addEventListener("click", function () {
-        var f = fotos[Number(b.getAttribute("data-foto"))];
-        abrirVentana('<div class="tp-ventana-foto"><button type="button" class="boton-icono tp-cerrar-foto" data-cerrar aria-label="Cerrar">✕</button>' +
-          img(f.zoom || f.thumb, sub.nombre) + "</div>", location.hash);
+        if (!window.VisorFotos) return;
+        var urls = fotos.map(function (f) { return f.zoom || f.thumb; });
+        window.VisorFotos.abrir({ total: 1, indice: 0, obtener: function () {
+          return { fotos: urls.slice(Number(b.getAttribute("data-foto"))).concat(urls.slice(0, Number(b.getAttribute("data-foto")))),
+            titulo: sub.nombre, subtitulo: cat.nombre,
+            boton: { texto: "🛒 Hacer pedido", clase: "boton-rojo", alTocar: function () {
+              window.VisorFotos.cerrar(function () { regresoVentana = location.hash; location.hash = "#/c/" + cat.slug + "/m/" + sub.id; });
+            } } };
+        } });
       });
     });
   }
@@ -1073,6 +1083,29 @@
   }
 
   document.getElementById("nombreOptica").textContent = cliente.optica || "";
+  /** Datos de un producto para el visor de fotos (js/visor.js) */
+  function itemVisor(ref) {
+    var cat = categoriaPorSlug(ref.cat); var datos = cat && categorias[cat.slug]; var sub = cat && subDe(cat, ref.sub);
+    if (!datos || !sub) return null;
+    var r = null; (datos.subcategorias[sub.id] || []).forEach(function (x) { if (String(x[0]) === String(ref.id)) r = x; });
+    if (!r) return null;
+    var pres = presentacionDe(cat.slug, r[0]);
+    var fotos = (datos.fotos && datos.fotos[r[0]]) || (r[4] ? [r[4]] : []);
+    var detalle = r[2] == null ? '<span class="precio sin-precio">⏳ Precio en preparación</span>'
+      : pres ? '<span class="visor-pres">📦 ' + tituloPres(pres) + "</span><span class=\"visor-precio\">" + cuentaPres(pres).replace(/ = (Bs [\d.]+)$/, " = <b>$1</b>") + "</span>"
+      : '<span class="visor-precio"><b>' + bs(r[2]) + "</b></span>";
+    var q = pedido[r[0]] ? pedido[r[0]].qty : 0;
+    if (q) detalle += '<span class="elegidos">' + textoUnidad(q, null, pres) + " en tu pedido</span>";
+    return {
+      fotos: fotos, titulo: r[1], subtitulo: sub.nombre + " · " + cat.nombre, detalleHtml: detalle,
+      boton: r[2] == null
+        ? { texto: "Sin precio aún", clase: "boton-gris-chico", alTocar: function () { window.VisorFotos.cerrar(function () { avisoSinPrecio(sub.nombre + " " + r[1], location.hash); }); } }
+        : { texto: "+ Agregar", clase: "boton-rojo", alTocar: function () {
+          var volver = location.hash;
+          window.VisorFotos.cerrar(function () { ventanaCantidad(cat, datos, sub, r[0], volver, function () { rutear(); }); });
+        } }
+    };
+  }
   function horaBolivia() {
     if (!window.HorarioOptimarket) return new Date().toLocaleString("es-BO");
     var a = window.HorarioOptimarket.ahora();
@@ -1109,6 +1142,14 @@
   });
   window.addEventListener("hashchange", rutear);
   document.addEventListener("click", function (e) {
+    var ver = e.target.closest && e.target.closest("[data-ver]");
+    if (ver && window.VisorFotos) {
+      e.preventDefault(); e.stopPropagation();
+      var botones = Array.prototype.slice.call(document.querySelectorAll("#vista [data-ver]"));
+      var lista = botones.map(function (x) { return { id: x.getAttribute("data-ver"), cat: x.getAttribute("data-cat"), sub: x.getAttribute("data-sub") }; });
+      window.VisorFotos.abrir({ total: lista.length, indice: Math.max(0, botones.indexOf(ver)), obtener: function (i) { return itemVisor(lista[i]); } });
+      return;
+    }
     var b = e.target.closest && e.target.closest("[data-sin-precio]");
     if (b) { e.preventDefault(); e.stopPropagation(); avisoSinPrecio(b.getAttribute("data-sin-precio"), location.hash); }
   }, true);
