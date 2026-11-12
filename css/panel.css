@@ -466,3 +466,17 @@ body.sin-barra .boton-asistente { bottom: calc(16px + env(safe-area-inset-bottom
 .tp-chat .tp-grupo-titulo b { font-size: 14px; }
 .as-botones { display: flex; flex-wrap: wrap; gap: 6px; }
 .as-gris { background: var(--tarjeta); border: 1px solid var(--borde); color: var(--texto); }
+
+/* ---------- Sin precio definido (0.00 en el sistema): se ve pero no se puede pedir ---------- */
+.precio.sin-precio { color: var(--ambar); font-weight: 800; }
+.aviso-sin-precio { font-size: 15px; line-height: 1.45; color: var(--texto); }
+.aviso-sin-precio-grande { padding: 16px; border-color: rgba(251, 191, 36, 0.45); }
+.aviso-sin-precio-grande b { display: block; color: var(--ambar); font-size: 16px; margin-bottom: 4px; }
+.tp-nota-sin-precio { margin-top: 14px; font-size: 13px; color: var(--ambar); }
+.ventana-pie a.boton { display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+
+/* ---------- Venta por PAQUETE / DOCENA (estuches de monturas) ---------- */
+.tarjeta-producto .presentacion { font-size: 11.5px; font-weight: 800; color: var(--ambar); }
+.tarjeta-producto .cuenta-pres { font-size: 12.5px; font-weight: 800; color: var(--texto); font-family: 'JetBrains Mono', ui-monospace, monospace; line-height: 1.3; }
+.item-pedido .linea.tenue { color: var(--tenue); font-size: 11.5px; }
+.tarjeta-producto .cuenta-pres b { font-size: 15px; color: #fff; white-space: nowrap; }

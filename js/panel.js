@@ -44,7 +44,19 @@
   function leerJson(almacen, clave) { try { return JSON.parse(almacen.getItem(clave) || "null"); } catch (_) { return null; } }
   function guardarPedido() { try { localStorage.setItem(CLAVE_PEDIDO, JSON.stringify(pedido)); } catch (_) {} }
   function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-  function bs(n) { return n == null ? "Consultar" : "Bs " + Number(n).toFixed(2); }
+  function bs(n) { return n == null ? "Sin precio aún" : "Bs " + Number(n).toFixed(2); }
+  // Precio 0.00 en el sistema = todavía no definido: se ve, pero no se puede pedir (dueño 2026-11-12)
+  var TITULO_SIN_PRECIO = "Precio en preparación";
+  var TEXTO_SIN_PRECIO = "Todavía no tiene un precio definido, por eso aún no se puede pedir. Estará disponible muy pronto.";
+  function avisoSinPrecio(nombre, rutaAlCerrar) {
+    var wa = "https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent("Hola, quisiera consultar por " + nombre + " (aún no tiene precio en la página).");
+    abrirVentana(
+      '<header class="ventana-cabecera"><div class="textos"><h2>⏳ ' + TITULO_SIN_PRECIO + "</h2><span>" + esc(nombre) + "</span></div>" +
+      '<button type="button" class="ventana-x" data-cerrar aria-label="Cerrar">✕</button></header>' +
+      '<div class="ventana-cuerpo"><p class="aviso-sin-precio">' + TEXTO_SIN_PRECIO + "</p></div>" +
+      '<footer class="ventana-pie"><a class="boton boton-gris-chico" href="' + wa + '" target="_blank" rel="noopener">Consultar por WhatsApp</a>' +
+      '<button type="button" class="boton boton-rojo" data-cerrar>Entendido</button></footer>', rutaAlCerrar || location.hash);
+  }
   function normalizar(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
   function aviso(texto) {
     var el = document.getElementById("aviso");
@@ -72,7 +84,24 @@
   // Material Listo y Block se venden SIEMPRE por PAR: cantidad 1 = 1 par (los 2 lentes) y el precio es el del par.
   // Lentilla: cantidad 1 = ½ par (un lente). (Confusión real 2026-11-12: un cliente puso 2 creyendo que era un par.)
   function vendePorPar(tipo) { return tipo === "materiallisto" || tipo === "block"; }
-  function textoUnidad(qty, tipo) {
+  // Por PAQUETE o DOCENA (estuches de monturas, dueño 2026-11-12): cantidad = paquetes/docenas; precio = el del paquete
+  function presentacionDe(catSlug, id) {
+    var d = categorias[catSlug];
+    return d && d.presentaciones && d.presentaciones[id] ? d.presentaciones[id] : null;
+  }
+  function nombrePres(pres, qty) {
+    var docena = pres.n === "Docena";
+    return qty === 1 ? (docena ? "docena" : "paquete") : (docena ? "docenas" : "paquetes");
+  }
+  function tituloPres(pres) { return pres.n === "Docena" ? "Docena (12 unidades)" : "Paquete de " + pres.u + " unidades"; }
+  // «10 unidades × Bs 10 = Bs 100»
+  function cuentaPres(pres) {
+    var pu = Number(pres.pu); var total = Math.round(pres.u * pu * 100) / 100;
+    var m = function (v) { return Math.round(v * 100) % 100 ? v.toFixed(2) : v.toFixed(0); };
+    return pres.u + " unidades × Bs " + m(pu) + " = Bs " + m(total);
+  }
+  function textoUnidad(qty, tipo, pres) {
+    if (pres) return qty + " " + nombrePres(pres, qty) + " (" + qty * pres.u + " unid.)";
     if (!tipo) return qty + (qty === 1 ? " unid." : " unids.");
     if (vendePorPar(tipo)) return qty + (qty === 1 ? " par" : " pares");
     if (qty === 1) return "½ par";
@@ -149,7 +178,7 @@
   // reemplazar = true (Material Listo / Block): la medida queda con la cantidad elegida, no se suma a lo que ya había
   function sumarAlPedido(item, cantidad, reemplazar) {
     var actual = pedido[item.id] && !reemplazar ? pedido[item.id].qty : 0;
-    pedido[item.id] = { id: item.id, cat: item.cat, catSlug: item.catSlug, sub: item.sub, subId: item.subId, medida: item.medida, cf: item.cf, tipo: item.tipo || null, qty: Math.min(999, actual + cantidad) };
+    pedido[item.id] = { id: item.id, cat: item.cat, catSlug: item.catSlug, sub: item.sub, subId: item.subId, medida: item.medida, cf: item.cf, tipo: item.tipo || null, pres: item.pres || null, qty: Math.min(999, actual + cantidad) };
     guardarPedido(); pintarBarra();
   }
   function cambiarEnPedido(id, delta) {
@@ -220,7 +249,7 @@
   function precioTarjeta(desde, prefijo) {
     return desde != null
       ? '<span class="precio">' + (prefijo ? prefijo + " " : "") + "<b>" + bs(desde) + "</b></span>"
-      : '<span class="precio">Precio a consultar</span>';
+      : '<span class="precio sin-precio">⏳ Próximamente</span>';
   }
 
   // ------------------------------------------------------------------ búsqueda global
@@ -269,13 +298,18 @@
 
   function tarjetaProducto(cat, sub, r, href) {
     var q = pedido[r[0]] ? pedido[r[0]].qty : 0;
-    var accion = href
+    var accion = r[2] == null
+      ? '<button type="button" class="boton boton-gris-chico boton-chico" data-sin-precio="' + esc(sub.nombre + " " + r[1]) + '">Sin precio aún</button>'
+      : href
       ? '<a class="boton boton-rojo boton-chico" href="' + href + '">+ Agregar</a>'
       : '<button type="button" class="boton boton-rojo boton-chico" data-agregar="' + r[0] + '" data-cat="' + esc(cat.slug) + '" data-sub="' + sub.id + '">+ Agregar</button>';
+    var pres = presentacionDe(cat.slug, r[0]);
     return '<div class="tarjeta-sub tarjeta-producto"><div class="foto">' + img(r[4], r[1]) + "</div>" +
       '<div class="info"><span class="nombre mono">' + esc(r[1]) + "</span>" +
-      (aliasDeModelo(sub, r) ? '<span class="alias">También: ' + esc(aliasDeModelo(sub, r)) + "</span>" : "") + precioTarjeta(r[2], "") +
-      (q ? '<span class="elegidos">' + textoUnidad(q, null) + " en tu pedido</span>" : "") + accion + "</div></div>";
+      (pres ? '<span class="presentacion">📦 ' + tituloPres(pres) + "</span>" : "") +
+      (aliasDeModelo(sub, r) ? '<span class="alias">También: ' + esc(aliasDeModelo(sub, r)) + "</span>" : "") +
+      (pres && r[2] != null ? '<span class="cuenta-pres">' + cuentaPres(pres).replace(/ = (Bs [\d.]+)$/, " = <b>$1</b>") + "</span>" : precioTarjeta(r[2], "")) +
+      (q ? '<span class="elegidos">' + textoUnidad(q, null, pres) + " en tu pedido</span>" : "") + accion + "</div></div>";
   }
 
   var MAX_MODELOS_BUSQUEDA = 12;
@@ -463,7 +497,7 @@
   }
   function cajaPrecio(etiqueta, rangoHtml, cf, ctx, especial) {
     var tono = cf == null ? "#64748b" : ctx.tono(cf);
-    var precios = cf == null ? '<span class="tp-consultar">Consultar</span>'
+    var precios = cf == null ? '<span class="tp-consultar">⏳ Próximamente</span>'
       : ctx.porPar
         ? '<span class="tp-monto"><b>' + montoPrecio(cf) + "</b> Bs<small>1 par</small></span>"
         : '<span class="tp-monto"><b>' + montoPrecio(cf) + "</b> Bs<small>½ par</small></span>" +
@@ -564,6 +598,7 @@
   }
   function vistaTabla(cat, datos, sub) {
     var armado = armarPrecios(cat, datos, sub);
+    var sinPrecio = (datos.subcategorias[sub.id] || []).some(function (r) { return r[2] == null; });
     var tipo = armado.tipo; var secciones = armado.secciones; var ctx = armado.ctx;
     var palabras = String(sub.nombre).trim().split(/\s+/);
     var arriba = palabras.length > 1 ? palabras.shift() : cat.nombre;
@@ -591,7 +626,8 @@
         return '<button type="button" class="chip" data-ir="tpSec' + i + '">' + esc(tituloCorto(s.titulo)) + "</button>";
       }).join("") + "</nav>" : "") +
       (secciones.length ? '<div class="tp-secciones">' + secciones.map(function (s, i) { return htmlSeccion(s, i, ctx); }).join("") + "</div>"
-        : '<p class="vacio">Este material todavía no tiene precios cargados. Pídelo por WhatsApp y te cotizamos.</p>') +
+        : '<div class="tarjeta aviso-sin-precio-grande"><b>⏳ ' + TITULO_SIN_PRECIO + "</b><p>" + esc(sub.nombre) + ": " + TEXTO_SIN_PRECIO + "</p></div>") +
+      (secciones.length && sinPrecio ? '<p class="tp-nota-sin-precio">⏳ Las medidas que no aparecen todavía no tienen precio definido: estarán disponibles muy pronto.</p>' : "") +
       botonPedir(' tp-pedir-final');
     document.getElementById("tpBuscar").addEventListener("click", ventanaBuscarMaterial);
     var actual = vista.querySelector('.tp-hermanos [aria-pressed="true"]');
@@ -618,6 +654,10 @@
     var filas = datos.subcategorias[sub.id] || [];
     vista.innerHTML = '<div class="encabezado-vista"><a class="volver" href="#/c/' + esc(cat.slug) + '">← Volver</a><div class="textos">' +
       '<h1 class="titulo">' + esc(sub.nombre) + '</h1><p class="subtitulo">' + esc(cat.nombre) + " · " + filas.length + (filas.length === 1 ? " modelo" : " modelos") + "</p></div></div>" +
+      // Las demás subcategorías de la categoría, a un toque (igual que en los lentes; la actual marcada)
+      (cat.subcategorias.length > 1 ? '<nav class="tp-hermanos" aria-label="Productos de ' + esc(cat.nombre) + '">' + cat.subcategorias.map(function (s) {
+        return '<a class="chip" href="#/c/' + esc(cat.slug) + "/s/" + s.id + '" aria-pressed="' + (s.id === sub.id) + '">' + esc(s.nombre) + "</a>";
+      }).join("") + "</nav>" : "") +
       '<label class="buscador">' + ICONO_BUSCAR + '<input id="buscarProd" type="search" placeholder="Buscar código o modelo…" autocomplete="off" aria-label="Buscar modelo"></label>' +
       '<div class="grilla-subcategorias" id="grillaProd"></div>';
     var grilla = document.getElementById("grillaProd"); var texto = "";
@@ -630,6 +670,8 @@
     }
     pintar();
     document.getElementById("buscarProd").addEventListener("input", function (e) { texto = e.target.value.trim(); pintar(); });
+    var actual = vista.querySelector('.tp-hermanos [aria-pressed="true"]');
+    if (actual && actual.scrollIntoView) actual.scrollIntoView({ block: "nearest", inline: "center" });
   }
 
   // ------------------------------------------------------------------ ventanas (como los modales del ERP)
@@ -711,7 +753,7 @@
       $("cNum").value = cantidad;
       $("unidad").textContent = resuelta ? "(" + textoUnidad(cantidad, tipo) + ")" : "";
       $("subtotal").textContent = resuelta && precio != null ? bs(precio * cantidad) : "--";
-      $("btnAgregar").disabled = !resuelta;
+      $("btnAgregar").disabled = !resuelta || resuelta[2] == null;
     }
     // Texto compacto para sugerir mientras se escribe a medias: «+1.25 ADD +2.25» → «+1.25add+2.25»
     function compacto(t) { return String(t || "").toLowerCase().replace(/^medida:\s*/, "").replace(/_?adds?:?/g, "add").replace(/base:?/g, "base").replace(/\s+/g, ""); }
@@ -739,6 +781,7 @@
       resuelta = porClave[claveMedida(medidaEscrita(tipo, c))] || null;
       sugerir(c);
       if (!resuelta) { mostrarEstado("ambar", $("sugerencias").children.length ? "" : "Esta medida no existe en este producto"); $("precio").textContent = "--"; }
+      else if (resuelta[2] == null) { mostrarEstado("ambar", "⏳ " + TEXTO_SIN_PRECIO); $("precio").textContent = "Sin precio aún"; }
       else {
         var ya = porPar && pedido[resuelta[0]] ? pedido[resuelta[0]].qty : 0;
         mostrarEstado(ya ? "ambar" : "", ya ? "Ya tienes " + textoUnidad(ya, tipo) + " de esta medida en tu pedido. Si agregas, queda la cantidad que elijas abajo (no se suma)." : "");
@@ -767,7 +810,7 @@
     $("cNum").addEventListener("input", function () { var n = parseInt($("cNum").value.replace(/\D/g, ""), 10); cantidad = isNaN(n) || n < 1 ? 1 : Math.min(999, n); $("unidad").textContent = resuelta ? "(" + textoUnidad(cantidad, tipo) + ")" : ""; $("subtotal").textContent = resuelta && resuelta[2] != null ? bs(resuelta[2] * cantidad) : "--"; });
     var agregando = false;   // un doble toque (o Enter + toque) agrega una sola vez
     $("btnAgregar").addEventListener("click", function () {
-      if (!resuelta || agregando) return;
+      if (!resuelta || resuelta[2] == null || agregando) return;
       agregando = true; setTimeout(function () { agregando = false; }, 900);
       var habia = porPar && pedido[resuelta[0]] ? pedido[resuelta[0]].qty : 0;
       sumarAlPedido({ id: resuelta[0], cat: cat.nombre, catSlug: cat.slug, sub: sub.nombre, subId: sub.id, medida: resuelta[1], cf: resuelta[2], tipo: tipo }, cantidad, porPar);
@@ -795,27 +838,34 @@
     var r = null; (datos.subcategorias[sub.id] || []).forEach(function (x) { if (String(x[0]) === String(idProd)) r = x; });
     var rutaProductos = rutaRegreso || "#/c/" + cat.slug + "/s/" + sub.id;
     if (!r) { location.replace(rutaProductos); return; }
+    if (r[2] == null) { avisoSinPrecio(sub.nombre + " " + r[1], rutaProductos); return; }
     var cantidad = 1;
+    var pres = presentacionDe(cat.slug, r[0]);
     var capa = abrirVentana(
       '<header class="ventana-cabecera">' + img(r[4], r[1], "ventana-foto") +
       '<div class="textos"><h2 class="mono">' + esc(r[1]) + "</h2><span>" + esc(sub.nombre) + " · " + esc(cat.nombre) + "</span></div>" +
       '<button type="button" class="ventana-x" data-cerrar aria-label="Cerrar">✕</button></header>' +
       '<div class="ventana-cuerpo">' +
-      '<div class="bloque fila"><span class="etiqueta">Precio</span><strong class="mono">' + bs(r[2]) + "</strong></div>" +
-      '<div class="bloque fila"><span class="etiqueta">Cantidad</span><div class="contador-cant grande"><button type="button" id="cMenos" aria-label="Quitar uno">−</button>' +
+      (pres ? '<div class="bloque bloque-par"><div class="fila"><span class="etiqueta">Precio ' + (pres.n === "Docena" ? "de la docena" : "del paquete") + '</span><strong class="mono">' + bs(r[2]) + "</strong></div>" +
+        '<p class="aviso-par">📦 ' + tituloPres(pres) + ": <b>" + cuentaPres(pres) + "</b></p></div>"
+        : '<div class="bloque fila"><span class="etiqueta">Precio</span><strong class="mono">' + bs(r[2]) + "</strong></div>") +
+      '<div class="bloque fila"><span class="etiqueta">' + (pres ? "Cantidad de " + nombrePres(pres, 2) : "Cantidad") + '</span><div class="contador-cant grande"><button type="button" id="cMenos" aria-label="Quitar uno">−</button>' +
       '<input id="cNum" class="num" inputmode="numeric" value="1" aria-label="Cantidad"><button type="button" id="cMas" aria-label="Agregar uno">+</button></div></div>' +
-      '<div class="bloque fila resumen"><span class="etiqueta">Subtotal</span><strong id="subtotal" class="mono verde">' + bs(r[2]) + "</strong></div></div>" +
+      '<div class="bloque fila resumen"><span><span class="etiqueta">Subtotal</span> <small id="unidadPres" class="tenue">' + (pres ? "(" + textoUnidad(1, null, pres) + ")" : "") + '</small></span><strong id="subtotal" class="mono verde">' + bs(r[2]) + "</strong></div></div>" +
       '<footer class="ventana-pie"><button type="button" class="boton boton-gris-chico" data-cerrar>Cancelar</button>' +
       '<button type="button" class="boton boton-rojo" id="btnAgregar">✓ Agregar al pedido</button></footer>',
       rutaProductos);
     var $ = function (id) { return capa.querySelector("#" + id); };
-    function pintar() { $("cNum").value = cantidad; $("subtotal").textContent = r[2] != null ? bs(r[2] * cantidad) : "Consultar"; }
+    function pintar() {
+      $("cNum").value = cantidad; $("subtotal").textContent = r[2] != null ? bs(r[2] * cantidad) : "Consultar";
+      if (pres) $("unidadPres").textContent = "(" + textoUnidad(cantidad, null, pres) + ")";
+    }
     $("cMenos").addEventListener("click", function () { if (cantidad > 1) { cantidad--; pintar(); } });
     $("cMas").addEventListener("click", function () { if (cantidad < 999) { cantidad++; pintar(); } });
-    $("cNum").addEventListener("input", function () { var n = parseInt($("cNum").value.replace(/\D/g, ""), 10); cantidad = isNaN(n) || n < 1 ? 1 : Math.min(999, n); $("subtotal").textContent = r[2] != null ? bs(r[2] * cantidad) : "Consultar"; });
+    $("cNum").addEventListener("input", function () { var n = parseInt($("cNum").value.replace(/\D/g, ""), 10); cantidad = isNaN(n) || n < 1 ? 1 : Math.min(999, n); $("subtotal").textContent = r[2] != null ? bs(r[2] * cantidad) : "Consultar"; if (pres) $("unidadPres").textContent = "(" + textoUnidad(cantidad, null, pres) + ")"; });
     $("btnAgregar").addEventListener("click", function () {
-      sumarAlPedido({ id: r[0], cat: cat.nombre, catSlug: cat.slug, sub: sub.nombre, subId: sub.id, medida: r[1], cf: r[2], tipo: null }, cantidad);
-      aviso("✓ Agregado: " + r[1] + " × " + cantidad);
+      sumarAlPedido({ id: r[0], cat: cat.nombre, catSlug: cat.slug, sub: sub.nombre, subId: sub.id, medida: r[1], cf: r[2], tipo: null, pres: pres }, cantidad);
+      aviso("✓ Agregado: " + r[1] + " — " + (pres ? textoUnidad(cantidad, null, pres) : "× " + cantidad));
       capa.salir();
       if (alAgregar) alAgregar();
     });
@@ -855,7 +905,8 @@
       html += '<div class="grupo-pedido"><h3><a href="' + ruta + '">' + esc(k) + " ›</a></h3>";
       g.sort(function (a, b) { return a.medida.localeCompare(b.medida, "es", { numeric: true }); }).forEach(function (p) {
         html += '<div class="item-pedido" data-id="' + p.id + '"><div><div class="medida">' + esc(p.medida) + "</div>" +
-          '<div class="linea">' + textoUnidad(p.qty, p.tipo) + " · " + bs(p.cf) + (p.cf != null ? (vendePorPar(p.tipo) ? " el par" : " c/u") + " = <b>" + bs(p.cf * p.qty) + "</b>" : "") + "</div></div>" +
+          '<div class="linea">' + textoUnidad(p.qty, p.tipo, p.pres) + " · " + bs(p.cf) + (p.cf != null ? (p.pres ? (p.pres.n === "Docena" ? " la docena" : " el paquete") : vendePorPar(p.tipo) ? " el par" : " c/u") + " = <b>" + bs(p.cf * p.qty) + "</b>" : "") + "</div>" +
+          (p.pres ? '<div class="linea tenue">' + cuentaPres(p.pres) + " c/" + (p.pres.n === "Docena" ? "docena" : "paquete") + "</div>" : "") + "</div>" +
           '<div class="contador-cant"><button type="button" class="menos" data-accion="menos" aria-label="Quitar uno">−</button><span class="num activo">' + p.qty + "</span>" +
           '<button type="button" data-accion="mas" aria-label="Agregar uno">+</button></div></div>';
       });
@@ -890,10 +941,11 @@
     Object.keys(grupos).sort().forEach(function (sub) {
       mensaje += "*" + sub + "*\n";
       grupos[sub].forEach(function (p) {
-        var par = vendePorPar(p.tipo);
-        mensaje += "• " + p.medida + " — " + textoUnidad(p.qty, p.tipo) + (par ? "" : " (" + p.qty + ")") +
-          (p.cf != null ? " × " + bs(p.cf) + (par ? " el par" : "") : " — precio a consultar") + "\n";
-        lineas.push(sub + " | " + p.medida + " | Cant: " + (par ? textoUnidad(p.qty, p.tipo) : p.qty) + " | P.U" + (par ? " (par)" : "") + ": " + (p.cf != null ? p.cf : "consultar"));
+        var par = vendePorPar(p.tipo); var pq = p.pres;
+        var unidadVenta = pq ? (pq.n === "Docena" ? " la docena" : " el paquete") : par ? " el par" : "";
+        mensaje += "• " + p.medida + " — " + textoUnidad(p.qty, p.tipo, pq) + (par || pq ? "" : " (" + p.qty + ")") +
+          (p.cf != null ? " × " + bs(p.cf) + unidadVenta : " — precio a consultar") + "\n";
+        lineas.push(sub + " | " + p.medida + " | Cant: " + (par || pq ? textoUnidad(p.qty, p.tipo, pq) : p.qty) + " | P.U" + (pq ? " (" + pq.n.toLowerCase() + ")" : par ? " (par)" : "") + ": " + (p.cf != null ? p.cf : "consultar"));
       });
       mensaje += "\n";
     });
@@ -957,6 +1009,10 @@
     location.replace("form.html");
   });
   window.addEventListener("hashchange", rutear);
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-sin-precio]");
+    if (b) { e.preventDefault(); e.stopPropagation(); avisoSinPrecio(b.getAttribute("data-sin-precio"), location.hash); }
+  }, true);
 
   // ------------------------------------------------------------------ asistente (js/asistente.js, se baja al tocarlo)
   window.PanelCatalogo = {
@@ -976,6 +1032,7 @@
       if (location.hash === destino) rutear(); else location.hash = destino;
     },
     preciosParaChat: preciosParaChat,
+    textoPresentacion: function (cat, id) { var p = presentacionDe(cat.slug, id); return p ? tituloPres(p) + ": " + cuentaPres(p) : ""; },
     verPrecios: function (cat, sub) { location.hash = "#/c/" + cat.slug + "/t/" + sub.id; },
     agregarModelo: function (cat, sub, id) {
       asegurarCategoria(cat).then(function (d) { ventanaCantidad(cat, d, sub, id, location.hash); });

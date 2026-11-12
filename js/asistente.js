@@ -272,7 +272,8 @@
     if (modelos.length) {
       html += "<p>" + (opticos.length ? "Y también:" : "Esto encontré:") + "</p><ul class=\"as-lista\">" + modelos.slice(0, MAX_LINEAS).map(function (m) {
         var alias = api.aliasDeModelo(m.sub, m.fila);
-        return filaRespuesta(m.fila[1] + (alias ? " (" + alias + ")" : ""), esc(m.sub.nombre) + " · <b>" + bs(m.fila[2]) + "</b>",
+        var pres = api.textoPresentacion ? api.textoPresentacion(m.cat, m.fila[0]) : "";
+        return filaRespuesta(m.fila[1] + (alias ? " (" + alias + ")" : ""), esc(m.sub.nombre) + " · <b>" + bs(m.fila[2]) + "</b>" + (pres ? "<br>📦 " + esc(pres) : ""),
           boton("Agregar", function () { cerrar(); api.agregarModelo(m.cat, m.sub, m.fila[0]); }, "as-rojo"));
       }).join("") + "</ul>";
       if (modelos.length > MAX_LINEAS) {
